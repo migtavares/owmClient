@@ -29,8 +29,6 @@ public class CurrentWeatherTest {
 	@Test
 	public void testWeatherByCityName () {
 		OwmClient owm = new OwmClient ();
-		String answer = owm.findCurrentByCityName ("Lisbon");
-		System.out.println (answer);
 	}
 
 }
