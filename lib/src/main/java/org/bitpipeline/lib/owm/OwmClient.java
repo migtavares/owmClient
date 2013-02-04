@@ -33,10 +33,6 @@ import org.json.JSONObject;
  * in http://openweathermap.org/wiki/API/JSON_API
  * @author mtavares */
 public class OwmClient {
-	static enum Lang {
-		RU, EN, DE, FR, ES, IT
-	}
-
 	private String baseOwmUrl = "http://api.openweathermap.org/data/2.1/";
 	private int retriesPerRequest = 3;
 
@@ -65,7 +61,7 @@ public class OwmClient {
 	 * @throws JSONException if the response from the OWM server can't be parsed
 	 * @throws IOException if there's some network error or the OWM server replies with a error. */
 	public List<WeatherData> currentWeatherAroundPoint (float lat, float lon, int cnt) throws IOException, JSONException { //, boolean cluster, OwmClient.Lang lang) {
-		String subUrl = String.format ("find/station?lat=%f&lon=%f&cnt=%d",
+		String subUrl = String.format ("find/station?lat=%f&lon=%f&cnt=%d&cluster=yes",
 				Float.valueOf (lat), Float.valueOf (lon), Integer.valueOf (cnt));
 		JSONObject response = doQuery (subUrl);
 		return weatherDataListFromJSon (response);
@@ -78,12 +74,64 @@ public class OwmClient {
 	 * 	actual answer might be less than the requested).
 	 * @throws JSONException if the response from the OWM server can't be parsed
 	 * @throws IOException if there's some network error or the OWM server replies with a error. */
-	public List<WeatherData> currentWeatherAroundCity (float lat, float lon, int cnt) throws IOException, JSONException { //, boolean cluster, OwmClient.Lang lang) {
-		String subUrl = String.format ("find/city?lat=%f&lon=%f&cnt=%d",
+	public List<WeatherData> currentWeatherAtCity (float lat, float lon, int cnt) throws IOException, JSONException { //, boolean cluster, OwmClient.Lang lang) {
+		String subUrl = String.format ("find/city?lat=%f&lon=%f&cnt=%d&cluster=yes",
 				Float.valueOf (lat), Float.valueOf (lon), Integer.valueOf (cnt));
 		JSONObject response = doQuery (subUrl);
 		return weatherDataListFromJSon (response);
 	}
+
+	/** Find current weather within a bounding box
+	 * @param lat is the latitude of the geographic point of interest (North/South coordinate)
+	 * @param lon is the longitude of the geographic point of interest (East/West coordinate)
+	 * @throws JSONException if the response from the OWM server can't be parsed
+	 * @throws IOException if there's some network error or the OWM server replies with a error. */
+	public List<WeatherData> currentWeatherInBoundingBox (float northLat, float westLon, float southLat, float eastLon) throws IOException, JSONException { //, boolean cluster, OwmClient.Lang lang) {
+		String subUrl = String.format ("find/station?bbox=%f,%f,%f,%f&cluster=yes",
+				Float.valueOf (northLat), Float.valueOf (westLon),
+				Float.valueOf (southLat), Float.valueOf (eastLon));
+		JSONObject response = doQuery (subUrl);
+		return weatherDataListFromJSon (response);
+	}
+
+	/** Find current city weather within a bounding box
+	 * @param lat is the latitude of the geographic point of interest (North/South coordinate)
+	 * @param lon is the longitude of the geographic point of interest (East/West coordinate)
+	 * @throws JSONException if the response from the OWM server can't be parsed
+	 * @throws IOException if there's some network error or the OWM server replies with a error. */
+	public List<WeatherData> currentWeatherAtCityBoundingBox (float northLat, float westLon, float southLat, float eastLon) throws IOException, JSONException { //, boolean cluster, OwmClient.Lang lang) {
+		String subUrl = String.format ("find/city?bbox=%f,%f,%f,%f&cluster=yes",
+				Float.valueOf (northLat), Float.valueOf (westLon),
+				Float.valueOf (southLat), Float.valueOf (eastLon));
+		JSONObject response = doQuery (subUrl);
+		return weatherDataListFromJSon (response);
+	}
+
+	/** Find current weather within a circle
+	 * @param lat is the latitude of the geographic center of the circle (North/South coordinate)
+	 * @param lon is the longitude of the geographic center of the circle (East/West coordinate)
+	 * @throws JSONException if the response from the OWM server can't be parsed
+	 * @throws IOException if there's some network error or the OWM server replies with a error. */
+	public List<WeatherData> currentWeatherInCircle (float lat, float lon, float radius) throws IOException, JSONException { //, boolean cluster, OwmClient.Lang lang) {
+		String subUrl = String.format ("find/station?lat=%f&lon=%f&radius=%f&cluster=yes",
+				Float.valueOf (lat), Float.valueOf (lon), Float.valueOf (radius));
+		JSONObject response = doQuery (subUrl);
+		return weatherDataListFromJSon (response);
+	}
+
+	/** Find current city weather within a circle
+	 * @param lat is the latitude of the geographic point of interest (North/South coordinate)
+	 * @param lon is the longitude of the geographic point of interest (East/West coordinate)
+	 * @throws JSONException if the response from the OWM server can't be parsed
+	 * @throws IOException if there's some network error or the OWM server replies with a error. */
+	public List<WeatherData> currentWeatherAtCityCircle (float lat, float lon, float radius) throws IOException, JSONException { //, boolean cluster, OwmClient.Lang lang) {
+		String subUrl = String.format ("find/city?lat=%f&lon=%f&radius=%f&cluster=yes",
+				Float.valueOf (lat), Float.valueOf (lon), Float.valueOf (radius));
+		JSONObject response = doQuery (subUrl);
+		return weatherDataListFromJSon (response);
+	}
+
+
 
 	private List<WeatherData> weatherDataListFromJSon (JSONObject json) throws JSONException {
 		JSONArray stationList = json.getJSONArray ("list");

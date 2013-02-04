@@ -223,8 +223,36 @@ public class CurrentWeatherTest {
 	@Test
 	public void testCurrentWeatherAroundCity () throws HttpException, IOException, JSONException {
 		OwmClient owm = new OwmClient ();
-		List<WeatherData> weatherDataList = owm.currentWeatherAroundCity (55f, 37f, 10);
+		List<WeatherData> weatherDataList = owm.currentWeatherAtCity (55f, 37f, 10);
 		CurrentWeatherTest.assertWeatherDataList (weatherDataList, 10);
+	}
+
+	@Test
+	public void testCurrentWeatherInBoundingBox () throws HttpException, IOException, JSONException {
+		OwmClient owm = new OwmClient ();
+		List<WeatherData> weatherDataList = owm.currentWeatherInBoundingBox (12f, 32f, 15f, 37f);
+		CurrentWeatherTest.assertWeatherDataList (weatherDataList, Integer.MAX_VALUE);
+	}
+
+	@Test
+	public void testCurrentWeatherAtCityBoundingBox () throws HttpException, IOException, JSONException {
+		OwmClient owm = new OwmClient ();
+		List<WeatherData> weatherDataList = owm.currentWeatherAtCityBoundingBox (12f, 32f, 15f, 37f);
+		CurrentWeatherTest.assertWeatherDataList (weatherDataList, Integer.MAX_VALUE);
+	}
+
+	@Test
+	public void testCurrentWeatherInCircle () throws HttpException, IOException, JSONException {
+		OwmClient owm = new OwmClient ();
+		List<WeatherData> weatherDataList = owm.currentWeatherInCircle (55.5f, 37.5f, 40f);
+		CurrentWeatherTest.assertWeatherDataList (weatherDataList, Integer.MAX_VALUE);
+	}
+
+	@Test
+	public void testCurrentWeatherAtCityInCircle () throws HttpException, IOException, JSONException {
+		OwmClient owm = new OwmClient ();
+		List<WeatherData> weatherDataList = owm.currentWeatherAtCityCircle (55.5f, 37.5f, 40f);
+		CurrentWeatherTest.assertWeatherDataList (weatherDataList, Integer.MAX_VALUE);
 	}
 
 }
