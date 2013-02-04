@@ -421,9 +421,9 @@ public class WeatherData {
 		}
 	}
 
-	private long id;
-	private String name;
-	private long dateTime;
+	private long id = Long.MIN_VALUE;
+	private String name = null;
+	private long dateTime = Long.MIN_VALUE;
 
 	private GeoCoord coord = null;
 	private Main main = null;
