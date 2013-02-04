@@ -1,8 +1,18 @@
 /**
- * Copyright 2012 
- *         J. Miguel P. Tavares <mtavares@bitpipeline.eu>
- *         BitPipeline
- */
+ * Copyright 2012 J. Miguel P. Tavares
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ***************************************************************************/
 package org.bitpipeline.lib.owm;
 
 import static org.junit.Assert.assertFalse;
@@ -14,8 +24,6 @@ import java.util.List;
 
 import org.apache.commons.httpclient.HttpException;
 import org.json.JSONException;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
 
 /**
@@ -193,31 +201,30 @@ public class CurrentWeatherTest {
 			"}\n" + 
 			"";
 
-	/**
-	 * @throws java.lang.Exception */
-	@Before
-	public void setUp () throws Exception {
-	}
-
-	/**
-	 * @throws java.lang.Exception */
-	@After
-	public void tearDown () throws Exception {
-	}
-
-	@Test
-	public void testCurrentWeatherAroundPoint () throws HttpException, IOException, JSONException {
-		OwmClient owm = new OwmClient ();
-		List<WeatherData> currentWeatherAroundPoint = owm.currentWeatherAroundPoint (55f, 37f, 10);
-		assertNotNull (currentWeatherAroundPoint);
-		assertTrue (currentWeatherAroundPoint.size () < 10);
-		for (WeatherData wd : currentWeatherAroundPoint) {
+	private static void assertWeatherDataList (List<WeatherData> weatherDataList, int maxData) {
+		assertNotNull (weatherDataList);
+		assertTrue (weatherDataList.size () <= maxData);
+		for (WeatherData wd : weatherDataList) {
 			assertNotNull (wd);
 			assertNotNull (wd.getName ());
 			assertFalse (wd.getId () == Long.MIN_VALUE);
 			assertFalse (wd.getDateTime () == Long.MIN_VALUE);
 			assertTrue (wd.hasMain ());
 		}
+	}
+
+	@Test
+	public void testCurrentWeatherAroundPoint () throws HttpException, IOException, JSONException {
+		OwmClient owm = new OwmClient ();
+		List<WeatherData> weatherDataList = owm.currentWeatherAroundPoint (55f, 37f, 10);
+		CurrentWeatherTest.assertWeatherDataList (weatherDataList, 10);
+	}
+
+	@Test
+	public void testCurrentWeatherAroundCity () throws HttpException, IOException, JSONException {
+		OwmClient owm = new OwmClient ();
+		List<WeatherData> weatherDataList = owm.currentWeatherAroundCity (55f, 37f, 10);
+		CurrentWeatherTest.assertWeatherDataList (weatherDataList, 10);
 	}
 
 }

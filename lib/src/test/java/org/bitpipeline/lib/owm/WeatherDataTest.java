@@ -1,8 +1,18 @@
 /**
- * Copyright 2012 
- *         J. Miguel P. Tavares <mtavares@bitpipeline.eu>
- *         BitPipeline
- */
+ * Copyright 2012 J. Miguel P. Tavares
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ***************************************************************************/
 package org.bitpipeline.lib.owm;
 
 import static org.junit.Assert.assertEquals;
@@ -12,6 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
+import org.bitpipeline.lib.owm.WeatherData.Clouds.CloudDescription;
 import org.bitpipeline.lib.owm.WeatherData.GeoCoord;
 import org.bitpipeline.lib.owm.WeatherData.WeatherCondition;
 import org.json.JSONException;
@@ -21,42 +32,9 @@ import org.junit.Test;
 /**
  * @author mtavares */
 public class WeatherDataTest {
-	static String WEATHER_DATA_STRING = "        {\n" + 
-			"            \"id\": 5106529,\n" + 
-			"            \"name\": \"Woodbridge\",\n" + 
-			"            \"coord\": {\n" + 
-			"                \"lon\": -74.284592,\n" + 
-			"                \"lat\": 40.557598\n" + 
-			"            },\n" + 
-			"            \"distance\": 0.814,\n" + 
-			"            \"main\": {\n" + 
-			"                \"temp\": 267.97,\n" + 
-			"                \"pressure\": 1026,\n" + 
-			"                \"humidity\": 45,\n" + 
-			"                \"temp_min\": 267.15,\n" + 
-			"                \"temp_max\": 269.15\n" + 
-			"            },\n" + 
-			"            \"dt\": 1359818400,\n" + 
-			"            \"wind\": {\n" + 
-			"                \"speed\": 3.1,\n" + 
-			"                \"deg\": 260\n" + 
-			"            },\n" + 
-			"            \"clouds\": {\n" + 
-			"                \"all\": 40\n" + 
-			"            },\n" + 
-			"            \"weather\": [\n" + 
-			"                {\n" + 
-			"                    \"id\": 802,\n" + 
-			"                    \"main\": \"Clouds\",\n" + 
-			"                    \"description\": \"scattered clouds\",\n" + 
-			"                    \"icon\": \"03d\"\n" + 
-			"                }\n" + 
-			"            ]\n" + 
-			"        }"; 
-
 	@Test
-	public void testWeatherDataParsing () throws JSONException {
-		JSONObject weatherDatajson = new JSONObject (WeatherDataTest.WEATHER_DATA_STRING);
+	public void testWeatherDataParsing_Point () throws JSONException {
+		JSONObject weatherDatajson = new JSONObject (TestData.CURRENT_WEATHER_POINT);
 		WeatherData weather = new WeatherData (weatherDatajson);
 		
 		assertNotNull (weather);
@@ -114,6 +92,37 @@ public class WeatherDataTest {
 		assertEquals ("Clouds", condition.getMain ());
 		assertEquals ("scattered clouds", condition.getDescription ());
 		assertEquals ("03d", condition.getIconName ());
+	}
+
+	@Test
+	public void testWeatherDataParsing_City () throws JSONException {
+		JSONObject weatherDatajson = new JSONObject (TestData.CURRENT_WEATHER_CITY);
+		WeatherData weather = new WeatherData (weatherDatajson);
+
+		assertTrue (weather.hasClouds ());
+		WeatherData.Clouds clouds = weather.getClouds ();
+		assertNotNull (clouds);
+		assertFalse (clouds.hasAll ());
+		assertTrue (clouds.hasConditions ());
+		List<CloudDescription> conditions = clouds.getConditions ();
+		assertNotNull (conditions);
+		assertEquals (2, conditions.size ());
+		CloudDescription cloudDescription = conditions.get (0);
+		assertNotNull (cloudDescription);
+		assertTrue (cloudDescription.hasDistance ());
+		assertTrue (cloudDescription.hasSkyCondition ());
+		assertFalse (cloudDescription.hasCumulus ());
+		assertEquals (91, cloudDescription.getDistance ());
+		assertEquals (CloudDescription.SkyCondition.BKN, cloudDescription.getSkyCondition ());
+
+		cloudDescription = conditions.get (1);
+		assertNotNull (cloudDescription);
+		assertTrue (cloudDescription.hasDistance ());
+		assertTrue (cloudDescription.hasSkyCondition ());
+		assertTrue (cloudDescription.hasCumulus ());
+		assertEquals (305, cloudDescription.getDistance ());
+		assertEquals (CloudDescription.SkyCondition.OVC, cloudDescription.getSkyCondition ());
+		assertEquals (CloudDescription.Cumulus.CB, cloudDescription.getCumulus ());
 	}
 
 	// TODO test with invalid data.

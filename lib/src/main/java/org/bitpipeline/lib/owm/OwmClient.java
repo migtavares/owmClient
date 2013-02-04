@@ -1,8 +1,18 @@
 /**
- * Copyright 2012 
- *         J. Miguel P. Tavares <mtavares@bitpipeline.eu>
- *         BitPipeline
- */
+ * Copyright 2012 J. Miguel P. Tavares
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ***************************************************************************/
 package org.bitpipeline.lib.owm;
 
 import java.io.IOException;
@@ -11,6 +21,7 @@ import java.util.List;
 
 import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
 import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.json.JSONArray;
@@ -30,16 +41,45 @@ public class OwmClient {
 	private int retriesPerRequest = 3;
 
 	private HttpClient httpClient;
+	private LogInterface log;
 
 	public OwmClient () {
 		this.httpClient = new HttpClient ();
+		this.log = new SysErrLog ();
 	}
 
-	/** Find current weather around a point 
-	 * @throws JSONException 
-	 * @throws IOException */
+	public OwmClient (HttpClient httpClient, LogInterface log) {
+		if (httpClient == null)
+			throw new IllegalArgumentException ("Can construct a OwmClient with a null HttpClient");
+		if (log == null)
+			throw new IllegalArgumentException ("Can construct a OwmClient with a null LogInterface");
+		this.httpClient = httpClient;
+		this.log = log;
+	}
+
+	/** Find current weather around a geographic point
+	 * @param lat is the latitude of the geographic point of interest (North/South coordinate)
+	 * @param lon is the longitude of the geographic point of interest (East/West coordinate)
+	 * @param cnt is the requested number of weather stations to retrieve (the
+	 * 	actual answer might be less than the requested).
+	 * @throws JSONException if the response from the OWM server can't be parsed
+	 * @throws IOException if there's some network error or the OWM server replies with a error. */
 	public List<WeatherData> currentWeatherAroundPoint (float lat, float lon, int cnt) throws IOException, JSONException { //, boolean cluster, OwmClient.Lang lang) {
 		String subUrl = String.format ("find/station?lat=%f&lon=%f&cnt=%d",
+				Float.valueOf (lat), Float.valueOf (lon), Integer.valueOf (cnt));
+		JSONObject response = doQuery (subUrl);
+		return weatherDataListFromJSon (response);
+	}
+
+	/** Find current weather around a city coordinated
+	 * @param lat is the latitude of the geographic point of interest (North/South coordinate)
+	 * @param lon is the longitude of the geographic point of interest (East/West coordinate)
+	 * @param cnt is the requested number of weather stations to retrieve (the
+	 * 	actual answer might be less than the requested).
+	 * @throws JSONException if the response from the OWM server can't be parsed
+	 * @throws IOException if there's some network error or the OWM server replies with a error. */
+	public List<WeatherData> currentWeatherAroundCity (float lat, float lon, int cnt) throws IOException, JSONException { //, boolean cluster, OwmClient.Lang lang) {
+		String subUrl = String.format ("find/city?lat=%f&lon=%f&cnt=%d",
 				Float.valueOf (lat), Float.valueOf (lon), Integer.valueOf (cnt));
 		JSONObject response = doQuery (subUrl);
 		return weatherDataListFromJSon (response);
@@ -53,7 +93,8 @@ public class OwmClient {
 				weatherDataList.add (
 						new WeatherData (stationList.getJSONObject (i)));
 			} catch (JSONException jsonE) {
-				// ignore this one.
+				this.log.w (jsonE, "Error when parsing a weather data");
+				this.log.d (stationList.getJSONObject (i).toString (4));
 			}
 		}
 		return weatherDataList;
@@ -62,12 +103,17 @@ public class OwmClient {
 	private JSONObject doQuery (String subUrl) throws JSONException, IOException {
 		String responseBody = null;
 		GetMethod httpget = new GetMethod (this.baseOwmUrl + subUrl);
+		this.log.d ("Query: %s", httpget.getURI ().toString ());
 		httpget.getParams ().setParameter (HttpMethodParams.RETRY_HANDLER,
 				new DefaultHttpMethodRetryHandler (this.retriesPerRequest, false));
 
 		try {
-			this.httpClient.executeMethod (httpget);
-			responseBody = httpget.getResponseBodyAsString ();
+			int statusCode = this.httpClient.executeMethod (httpget);
+			if (statusCode != HttpStatus.SC_OK) {
+				throw new IOException (
+						String.format ("OWM server responded with status code %d: %s", statusCode, httpget.getStatusLine ()));
+			}
+			responseBody = httpget.getResponseBodyAsString (1024*48);
 		} catch (IOException e) {
 			throw e;
 		} finally {

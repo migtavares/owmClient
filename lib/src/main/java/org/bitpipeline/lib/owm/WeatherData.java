@@ -1,3 +1,18 @@
+/**
+ * Copyright 2012 J. Miguel P. Tavares
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ ***************************************************************************/
 package org.bitpipeline.lib.owm;
 
 import java.util.ArrayList;
@@ -235,7 +250,11 @@ public class WeatherData {
 	private static class Details {
 		private Map<Integer, Float> measurements = null;
 
+		public Details () {
+		}
+
 		public Details (JSONObject json) {
+			// TODO
 		}
 
 		public boolean hasMeasures ()  {
@@ -263,7 +282,95 @@ public class WeatherData {
 
 	public static class Clouds extends Details {
 		private static final String JSON_ALL = "all";
+
+		public static class CloudDescription {
+			private static final String JSON_DISTANCE = "distance";
+			private static final String JSON_CONDITION = "condition";
+			private static final String JSON_CUMULUS = "cumulus";
+
+			public static enum SkyCondition {
+				UNKNOWN ("unknown"),
+				FEW ("few [12.5%, 25%]"),
+				SCT ("scattered [37.5%, 50%]"),
+				BKN ("broken sky [62%, 87.5%]"),
+				OVC ("overcast {100%}"),
+				VV ("vertical visibility");
+
+				private final String description;
+
+				private SkyCondition (String description) {
+					this.description = description;
+				}
+
+				public String getDescription () {
+					return this.description;
+				}
+			}
+
+			public static enum Cumulus {
+				UNKNOWN ("unknown"),
+				TCU ("towering cumulus"),
+				CB ("cumulonimbus"),
+				ACC ("altocumulus castellanus");
+
+				private final String description;
+
+				private Cumulus (String description) {
+					this.description = description;
+				}
+
+				public String getDescription () {
+					return this.description;
+				}
+			}
+
+			private SkyCondition skyCondition = null;
+			private Cumulus cumulus = null;
+			private int distance = Integer.MIN_VALUE;
+
+			public CloudDescription (JSONObject json) throws JSONException {
+				if (json.has (CloudDescription.JSON_DISTANCE))
+					this.distance = json.getInt (CloudDescription.JSON_DISTANCE);
+				if (json.has (CloudDescription.JSON_CONDITION)) {
+					try {
+						this.skyCondition = SkyCondition.valueOf (json.getString (CloudDescription.JSON_CONDITION));
+					} catch (IllegalArgumentException e) {
+						this.skyCondition = SkyCondition.UNKNOWN;
+					}
+				}
+				if (json.has (CloudDescription.JSON_CUMULUS)) {
+					try {
+						this.cumulus = Cumulus.valueOf (json.getString (CloudDescription.JSON_CUMULUS));
+					} catch (IllegalArgumentException e) {
+						this.cumulus = Cumulus.UNKNOWN;
+					}
+				}
+			}
+
+			public boolean hasDistance () {
+				return this.distance != Integer.MIN_VALUE;
+			}
+			public int getDistance () {
+				return this.distance;
+			}
+
+			public boolean hasSkyCondition () {
+				return this.skyCondition != null;
+			}
+			public SkyCondition getSkyCondition () {
+				return this.skyCondition;
+			}
+
+			public boolean hasCumulus () {
+				return this.cumulus != null;
+			}
+			public Cumulus getCumulus () {
+				return this.cumulus;
+			}
+		}
+
 		private int all = Integer.MIN_VALUE;
+		List<CloudDescription> conditions = null;
 
 		public Clouds (JSONObject json) throws JSONException {
 			super (json);
@@ -271,11 +378,29 @@ public class WeatherData {
 				this.all = json.getInt (Clouds.JSON_ALL);
 		}
 
+		public Clouds (JSONArray jsonArray) throws JSONException {
+			this.conditions = new ArrayList<CloudDescription> (jsonArray.length ());
+			for (int i = 0; i < jsonArray.length (); i++) {
+				this.conditions.add (
+						new CloudDescription (jsonArray.getJSONObject (i)));
+			}
+		}
+
 		public boolean hasAll () {
 			return this.all != Integer.MIN_VALUE;
 		}
 		public int getAll () {
 			return this.all;
+		}
+
+		public boolean hasConditions () {
+			return this.conditions != null;
+		}
+		public List<CloudDescription> getConditions () {
+			if (this.conditions != null)
+				return this.conditions;
+			else
+				return Collections.emptyList ();
 		}
 	}
 
@@ -443,8 +568,16 @@ public class WeatherData {
 			this.main = new Main (json.getJSONObject (WeatherData.JSON_MAIN));
 		if (json.has (WeatherData.JSON_WIND))
 			this.wind = new Wind (json.getJSONObject (WeatherData.JSON_WIND));
-		if (json.has (WeatherData.JSON_CLOUDS))
-			this.clouds = new Clouds (json.getJSONObject (WeatherData.JSON_CLOUDS));
+		if (json.has (WeatherData.JSON_CLOUDS)) {
+			JSONArray coudsArray = json.optJSONArray (WeatherData.JSON_CLOUDS);
+			if (coudsArray != null)
+				this.clouds = new Clouds (coudsArray);
+			else {
+				JSONObject cloudsObj = json.optJSONObject (WeatherData.JSON_CLOUDS);
+				if (cloudsObj != null)
+					this.clouds = new Clouds (json.getJSONObject (WeatherData.JSON_CLOUDS));
+			}
+		}
 		if (json.has (WeatherData.JSON_RAIN))
 			this.rain = new Precipitation (json.getJSONObject (WeatherData.JSON_RAIN));
 		if (json.has (WeatherData.JSON_SNOW))
