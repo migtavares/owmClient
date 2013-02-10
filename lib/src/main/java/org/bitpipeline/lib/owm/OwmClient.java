@@ -28,7 +28,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-
 /** Implements a synchronous HTTP client to the Open Weather Map service described
  * in http://openweathermap.org/wiki/API/JSON_API
  * @author mtavares */
@@ -147,7 +146,26 @@ public class OwmClient {
 		return new WeatherData (response);
 	}
 
+	/** Find current city weather
+	 * @param cityName is the name of the city
+	 * @throws JSONException if the response from the OWM server can't be parsed
+	 * @throws IOException if there's some network error or the OWM server replies with a error. */
+	public List<WeatherData> currentWeatherAtCity (String cityName) throws IOException, JSONException {
+		String subUrl = String.format ("find/name?q=%s", cityName);
+		JSONObject response = doQuery (subUrl);
+		return weatherDataListFromJSon (response);
+	}
 
+	/** Find current city weather
+	 * @param cityName is the name of the city
+	 * @param countryCode is the two letter country code
+	 * @throws JSONException if the response from the OWM server can't be parsed
+	 * @throws IOException if there's some network error or the OWM server replies with a error. */
+	public List<WeatherData> currentWeatherAtCity (String cityName, String countryCode) throws IOException, JSONException {
+		String subUrl = String.format ("find/name?q=%s,%s", cityName, countryCode.toUpperCase ());
+		JSONObject response = doQuery (subUrl);
+		return weatherDataListFromJSon (response);
+	}
 
 	private List<WeatherData> weatherDataListFromJSon (JSONObject json) throws JSONException {
 		JSONArray stationList = json.getJSONArray ("list");

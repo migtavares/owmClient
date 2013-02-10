@@ -30,6 +30,7 @@ public class WeatherData {
 	private static final String JSON_ID        = "id";
 	private static final String JSON_NAME      = "name";
 	private static final String JSON_DATE_TIME = "dt";
+	private static final String JSON_URL       = "url";
 	private static final String JSON_COORD     = "coord";
 	private static final String JSON_MAIN      = "main";
 	private static final String JSON_WIND      = "wind";
@@ -37,6 +38,7 @@ public class WeatherData {
 	private static final String JSON_RAIN      = "rain";
 	private static final String JSON_SNOW      = "snow";
 	private static final String JSON_WEATHER   = "weather";
+	private static final String JSON_SYS       = "sys";
 
 	public static class GeoCoord {
 		private static final String JSON_LAT = "lat";
@@ -546,9 +548,40 @@ public class WeatherData {
 		}
 	}
 
+	public static class Sys {
+		private static final String JSON_COUNTRY    = "country";
+		private static final String JSON_POPULATION = "population";
+		private String country = null;
+		private int population = Integer.MIN_VALUE;
+
+		public Sys (JSONObject json) throws JSONException {
+			if (json.has (Sys.JSON_COUNTRY))
+				this.country = json.getString (Sys.JSON_COUNTRY);
+			if (json.has (Sys.JSON_POPULATION))
+				this.population = json.getInt (Sys.JSON_POPULATION);
+		}
+
+		public boolean hasCountry () {
+			return this.country != null;
+		}
+
+		public String getCountry () {
+			return this.country;
+		}
+
+		public boolean hasPopulation () {
+			return this.population >= 0;
+		}
+
+		public int getPopulation () {
+			return this.population;
+		}
+	}
+
 	private long id = Long.MIN_VALUE;
 	private String name = null;
 	private long dateTime = Long.MIN_VALUE;
+	private String url = null;
 
 	private GeoCoord coord = null;
 	private Main main = null;
@@ -557,11 +590,14 @@ public class WeatherData {
 	private Precipitation rain = null;
 	private Precipitation snow = null;
 	private List<WeatherCondition> weatherConditions = null;
+	private Sys sys = null;
 
 	public WeatherData (JSONObject json) throws JSONException {
 		this.id = json.getLong (WeatherData.JSON_ID);
 		this.name = json.getString (WeatherData.JSON_NAME);
 		this.dateTime = json.getLong (WeatherData.JSON_DATE_TIME);
+		if (json.has (WeatherData.JSON_URL))
+			this.url = json.getString (WeatherData.JSON_URL);
 		if (json.has (WeatherData.JSON_COORD))
 			this.coord = new GeoCoord (json.getJSONObject (WeatherData.JSON_COORD));
 		if (json.has (WeatherData.JSON_MAIN))
@@ -593,6 +629,8 @@ public class WeatherData {
 				}
 			}
 		}
+		if (json.has (WeatherData.JSON_SYS))
+			this.sys = new Sys (json.getJSONObject (WeatherData.JSON_SYS));
 	}
 
 	public long getId () {
@@ -605,6 +643,14 @@ public class WeatherData {
 
 	public long getDateTime () {
 		return this.dateTime;
+	}
+
+	public boolean hasUrl () {
+		return this.url != null;
+	}
+
+	public String getUrl () {
+		return this.url;
 	}
 
 	public boolean hasCoord () {
@@ -654,5 +700,13 @@ public class WeatherData {
 	}
 	public List<WeatherCondition> getWeatherConditions () {
 		return this.weatherConditions;
+	}
+
+	public boolean hasSys () {
+		return this.sys != null;
+	}
+
+	public Sys getSys () {
+		return this.sys;
 	}
 }
