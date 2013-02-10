@@ -24,6 +24,8 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpMethodParams;
+import org.bitpipeline.lib.owm.log.LogInterface;
+import org.bitpipeline.lib.owm.log.SysErrLog;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -171,10 +173,10 @@ public class OwmClient {
 	 * @param cityId is the ID of the city
 	 * @throws JSONException if the response from the OWM server can't be parsed
 	 * @throws IOException if there's some network error or the OWM server replies with a error. */
-	public List<ForecastWeatherData> forecastWeatherAtCity (int cityId) throws JSONException, IOException {
+	public WeatherForecastResponse forecastWeatherAtCity (int cityId) throws JSONException, IOException {
 		String subUrl = String.format ("forecast/city/%d", cityId);
 		JSONObject response = doQuery (subUrl);
-		return forecastWeatherListFromJSON (response);
+		return new WeatherForecastResponse (response);
 	}
 
 	private List<WeatherData> weatherDataListFromJSon (JSONObject json) throws JSONException {

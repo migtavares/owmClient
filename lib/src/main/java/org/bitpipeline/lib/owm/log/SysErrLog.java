@@ -13,7 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  ***************************************************************************/
-package org.bitpipeline.lib.owm;
+package org.bitpipeline.lib.owm.log;
+
 
 /** A very simple logging to system err. */
 public class SysErrLog implements LogInterface {

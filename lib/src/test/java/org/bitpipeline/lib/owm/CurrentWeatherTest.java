@@ -35,6 +35,7 @@ import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpMethodBase;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.bitpipeline.lib.owm.log.SysErrLog;
 import org.json.JSONException;
 import org.junit.Test;
 import org.mockito.invocation.InvocationOnMock;
@@ -173,7 +174,7 @@ public class CurrentWeatherTest {
 	@Test
 	public void testForecastAtCityId () throws HttpException, IOException, JSONException {
 		OwmClient owm = new OwmClient ();
-		List<ForecastWeatherData> forecasts = owm.forecastWeatherAtCity (524901);
-		CurrentWeatherTest.assertForecastWeatherDataList (forecasts, Integer.MAX_VALUE);
+		WeatherForecastResponse forecastResponse = owm.forecastWeatherAtCity (524901);
+		CurrentWeatherTest.assertForecastWeatherDataList (forecastResponse.getForecasts (), Integer.MAX_VALUE);
 	}
 }
