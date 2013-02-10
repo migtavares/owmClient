@@ -15,16 +15,25 @@
  ***************************************************************************/
 package org.bitpipeline.lib.owm;
 
-public interface LogInterface {
-	void i (String msg, Object ... params);
-	void i (Throwable tr, String msg, Object ... params);
+import org.json.JSONException;
+import org.json.JSONObject;
 
-	void e (String msg, Object ... params);
-	void e (Throwable tr, String msg, Object ... params);
+/**
+ * @author mtavares */
+public class ForecastWeatherData extends AbstractWeatherData {
+	static private final String JSON_CALC_DT = "calc_dt";
 
-	void w (String msg, Object ... params);
-	void w (Throwable tr, String msg, Object ... params);
+	private long calcDateTime = Long.MIN_VALUE;
+	
+	/**
+	 * @param json
+	 * @throws JSONException */
+	public ForecastWeatherData (JSONObject json) throws JSONException {
+		super (json);
+		this.calcDateTime = json.getLong (ForecastWeatherData.JSON_CALC_DT);
+	}
 
-	void d (String msg, Object ... params);
-	void d (Throwable tr, String msg, Object ... params);
+	public long getCalcDateTime () {
+		return this.calcDateTime;
+	}
 }

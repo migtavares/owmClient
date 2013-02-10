@@ -76,6 +76,21 @@ public class CurrentWeatherTest {
 		}
 	}
 
+	private static void assertForecastWeatherData (ForecastWeatherData forecast) {
+		assertNotNull (forecast);
+		assertFalse (forecast.getDateTime () == Long.MIN_VALUE);
+		assertFalse (forecast.getCalcDateTime () == Long.MIN_VALUE);
+		assertTrue (forecast.hasMain ());
+	}
+
+	private static void assertForecastWeatherDataList (List<ForecastWeatherData> forecasts, int maxData) {
+		assertNotNull (forecasts);
+		assertTrue (forecasts.size () <= maxData);
+		for (ForecastWeatherData weatherData : forecasts) {
+			CurrentWeatherTest.assertForecastWeatherData (weatherData);
+		}
+	}
+
 	@Test
 	public void testCurrentWeatherAroundPoint () throws HttpException, IOException, JSONException {
 		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.CURRENT_WEATHER_AROUND_POINT);
@@ -153,5 +168,12 @@ public class CurrentWeatherTest {
 		for (WeatherData weather : weatherDataList) {
 			assertTrue ("london".equalsIgnoreCase (weather.getName ()));
 		}
+	}
+
+	@Test
+	public void testForecastAtCityId () throws HttpException, IOException, JSONException {
+		OwmClient owm = new OwmClient ();
+		List<ForecastWeatherData> forecasts = owm.forecastWeatherAtCity (524901);
+		CurrentWeatherTest.assertForecastWeatherDataList (forecasts, Integer.MAX_VALUE);
 	}
 }

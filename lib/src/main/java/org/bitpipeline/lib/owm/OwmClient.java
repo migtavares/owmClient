@@ -1,5 +1,5 @@
 /**
- * Copyright 2012 J. Miguel P. Tavares
+ * Copyright 2013 J. Miguel P. Tavares
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -167,6 +167,16 @@ public class OwmClient {
 		return weatherDataListFromJSon (response);
 	}
 
+	/** Get the weather forecast for a city
+	 * @param cityId is the ID of the city
+	 * @throws JSONException if the response from the OWM server can't be parsed
+	 * @throws IOException if there's some network error or the OWM server replies with a error. */
+	public List<ForecastWeatherData> forecastWeatherAtCity (int cityId) throws JSONException, IOException {
+		String subUrl = String.format ("forecast/city/%d", cityId);
+		JSONObject response = doQuery (subUrl);
+		return forecastWeatherListFromJSON (response);
+	}
+
 	private List<WeatherData> weatherDataListFromJSon (JSONObject json) throws JSONException {
 		JSONArray stationList = json.getJSONArray ("list");
 		List<WeatherData> weatherDataList = new ArrayList<WeatherData> (stationList.length ()); 
@@ -180,6 +190,21 @@ public class OwmClient {
 			}
 		}
 		return weatherDataList;
+	}
+
+	private List<ForecastWeatherData> forecastWeatherListFromJSON (JSONObject json) throws JSONException {
+		JSONArray owmForecasts = json.getJSONArray ("list");
+		List<ForecastWeatherData> forecastList = new ArrayList<ForecastWeatherData> (owmForecasts.length ()); 
+		for (int i = 0; i < owmForecasts.length (); i++) {
+			try {
+				forecastList.add (
+						new ForecastWeatherData (owmForecasts.getJSONObject (i)));
+			} catch (JSONException jsonE) {
+				this.log.w (jsonE, "Error when parsing a weather forecast");
+				this.log.d (owmForecasts.getJSONObject (i).toString (4));
+			}
+		}
+		return forecastList;
 	}
 
 	private JSONObject doQuery (String subUrl) throws JSONException, IOException {

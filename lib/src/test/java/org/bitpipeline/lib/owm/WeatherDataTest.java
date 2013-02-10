@@ -22,9 +22,9 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
-import org.bitpipeline.lib.owm.WeatherData.Clouds.CloudDescription;
-import org.bitpipeline.lib.owm.WeatherData.GeoCoord;
-import org.bitpipeline.lib.owm.WeatherData.WeatherCondition;
+import org.bitpipeline.lib.owm.AbstractWeatherData.Clouds.CloudDescription;
+import org.bitpipeline.lib.owm.AbstractWeatherData.GeoCoord;
+import org.bitpipeline.lib.owm.AbstractWeatherData.WeatherCondition;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
