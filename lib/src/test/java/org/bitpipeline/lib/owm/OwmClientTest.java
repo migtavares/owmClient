@@ -121,48 +121,54 @@ public class OwmClientTest {
 	public void testCurrentWeatherAroundPoint () throws HttpException, IOException, JSONException {
 		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.CURRENT_WEATHER_AROUND_POINT);
 		OwmClient owm = new OwmClient (mockHttpClient);
-		List<WeatherData> weatherDataList = owm.currentWeatherAroundPoint (55f, 37f, 10);
-		OwmClientTest.assertWeatherDataList (weatherDataList, 10);
+		WeatherStatusResponse currentWeather = owm.currentWeatherAroundPoint (55f, 37f, 10);
+		assertTrue (currentWeather.hasWeatherStatus ());
+		OwmClientTest.assertWeatherDataList (currentWeather.getWeatherStatus (), 10);
 	}
 
 	@Test
 	public void testCurrentWeatherAroundCity () throws HttpException, IOException, JSONException {
 		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.CURRENT_WEATHER_AROUND_CITY_COORD);
 		OwmClient owm = new OwmClient (mockHttpClient);
-		List<WeatherData> weatherDataList = owm.currentWeatherAtCity (55f, 37f, 10);
-		OwmClientTest.assertWeatherDataList (weatherDataList, 10);
+		WeatherStatusResponse currentWeather = owm.currentWeatherAtCity (55f, 37f, 10);
+		assertTrue (currentWeather.hasWeatherStatus ());
+		OwmClientTest.assertWeatherDataList (currentWeather.getWeatherStatus (), 10);
 	}
 
 	@Test
 	public void testCurrentWeatherInBoundingBox () throws HttpException, IOException, JSONException {
 		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.CURRENT_WEATHER_IN_BBOX);
 		OwmClient owm = new OwmClient (mockHttpClient);
-		List<WeatherData> weatherDataList = owm.currentWeatherInBoundingBox (12f, 32f, 15f, 37f);
-		OwmClientTest.assertWeatherDataList (weatherDataList, Integer.MAX_VALUE);
+		WeatherStatusResponse currentWeather = owm.currentWeatherInBoundingBox (12f, 32f, 15f, 37f);
+		assertTrue (currentWeather.hasWeatherStatus ());
+		OwmClientTest.assertWeatherDataList (currentWeather.getWeatherStatus (), Integer.MAX_VALUE);
 	}
 
 	@Test
 	public void testCurrentWeatherAtCityBoundingBox () throws HttpException, IOException, JSONException {
 		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.CURRENT_WEATHER_IN_CITY_BBOX);
 		OwmClient owm = new OwmClient (mockHttpClient);
-		List<WeatherData> weatherDataList = owm.currentWeatherAtCityBoundingBox (12f, 32f, 15f, 37f);
-		OwmClientTest.assertWeatherDataList (weatherDataList, Integer.MAX_VALUE);
+		WeatherStatusResponse currentWeather = owm.currentWeatherAtCityBoundingBox (12f, 32f, 15f, 37f);
+		assertTrue (currentWeather.hasWeatherStatus ());
+		OwmClientTest.assertWeatherDataList (currentWeather.getWeatherStatus (), Integer.MAX_VALUE);
 	}
 
 	@Test
 	public void testCurrentWeatherInCircle () throws HttpException, IOException, JSONException {
 		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.CURRENT_WEATHER_IN_CIRCLE);
 		OwmClient owm = new OwmClient (mockHttpClient);
-		List<WeatherData> weatherDataList = owm.currentWeatherInCircle (55.5f, 37.5f, 40f);
-		OwmClientTest.assertWeatherDataList (weatherDataList, Integer.MAX_VALUE);
+		WeatherStatusResponse currentWeather = owm.currentWeatherInCircle (55.5f, 37.5f, 40f);
+		assertTrue (currentWeather.hasWeatherStatus ());
+		OwmClientTest.assertWeatherDataList (currentWeather.getWeatherStatus (), Integer.MAX_VALUE);
 	}
 
 	@Test
 	public void testCurrentWeatherAtCityInCircle () throws HttpException, IOException, JSONException {
 		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.CURRENT_WEATHER_IN_CIRCLE);
 		OwmClient owm = new OwmClient (mockHttpClient);
-		List<WeatherData> weatherDataList = owm.currentWeatherAtCityCircle (55.5f, 37.5f, 40f);
-		OwmClientTest.assertWeatherDataList (weatherDataList, Integer.MAX_VALUE);
+		WeatherStatusResponse currentWeather = owm.currentWeatherAtCityCircle (55.5f, 37.5f, 40f);
+		assertTrue (currentWeather.hasWeatherStatus ());
+		OwmClientTest.assertWeatherDataList (currentWeather.getWeatherStatus (), Integer.MAX_VALUE);
 	}
 
 	@Test
@@ -170,17 +176,19 @@ public class OwmClientTest {
 		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.CURRENT_WEATHER_AT_CITY_ID_MOSKOW);
 		OwmClient owm = new OwmClient (mockHttpClient);
 		WeatherData weatherData = owm.currentWeatherAtCity (524901);
-		OwmClientTest.assertWeatherData (weatherData);
 		assertEquals ("Moscow", weatherData.getName ());
+		assertEquals (524901, weatherData.getId ());
+		OwmClientTest.assertWeatherData (weatherData);
 	}
 
 	@Test
 	public void testCurrentWeatherAtCityName () throws HttpException, IOException, JSONException {
 		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.CURRENT_WEATHER_AT_CITY_NAME_LONDON);
 		OwmClient owm = new OwmClient (mockHttpClient);
-		List<WeatherData> weatherDataList = owm.currentWeatherAtCity ("london");
-		OwmClientTest.assertWeatherDataList (weatherDataList, Integer.MAX_VALUE);
-		for (WeatherData weather : weatherDataList) {
+		WeatherStatusResponse currentWeather = owm.currentWeatherAtCity ("london");
+		assertTrue (currentWeather.hasWeatherStatus ());
+		OwmClientTest.assertWeatherDataList (currentWeather.getWeatherStatus (), Integer.MAX_VALUE);
+		for (WeatherData weather : currentWeather.getWeatherStatus ()) {
 			assertTrue ("london".equalsIgnoreCase (weather.getName ()));
 		}
 	}
@@ -189,9 +197,10 @@ public class OwmClientTest {
 	public void testCurrentWeatherAtCityNameWithCountryCode () throws HttpException, IOException, JSONException {
 		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.CURRENT_WEATHER_AT_CITY_NAME_LONDON_COUNTRY_CODE_UK);
 		OwmClient owm = new OwmClient (mockHttpClient);
-		List<WeatherData> weatherDataList = owm.currentWeatherAtCity ("london", "UK");
-		OwmClientTest.assertWeatherDataList (weatherDataList, Integer.MAX_VALUE);
-		for (WeatherData weather : weatherDataList) {
+		WeatherStatusResponse currentWeather = owm.currentWeatherAtCity ("london", "UK");
+		assertTrue (currentWeather.hasWeatherStatus ());
+		OwmClientTest.assertWeatherDataList (currentWeather.getWeatherStatus (), Integer.MAX_VALUE);
+		for (WeatherData weather : currentWeather.getWeatherStatus ()) {
 			assertTrue ("london".equalsIgnoreCase (weather.getName ()));
 		}
 	}

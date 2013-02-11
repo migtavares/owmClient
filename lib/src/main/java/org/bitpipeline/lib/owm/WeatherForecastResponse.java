@@ -16,6 +16,7 @@
 package org.bitpipeline.lib.owm;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.json.JSONArray;
@@ -25,7 +26,7 @@ import org.json.JSONObject;
 /**
  * 
  * @author mtavares */
-public class WeatherForecastResponse {
+public class WeatherForecastResponse extends AbstractOwmResponse {
 	static public class City {
 		static private final String JSON_ID             = "id";
 		static private final String JSON_COORD          = "coord";
@@ -97,18 +98,12 @@ public class WeatherForecastResponse {
 		}
 	}
 
-	static private final String JSON_COD = "cod";
-	static private final String JSON_MESSAGE = "message";
-	static private final String JSON_CALCTIME = "calctime";
 	static private final String JSON_URL = "url";
 	static private final String JSON_CITY = "city";
 	static private final String JSON_UNITS = "units";
 	static private final String JSON_MODEL = "model";
 	static private final String JSON_LIST = "list";
 
-	private final int code;
-	private final String message;
-	private final double calctime;
 	private final String url;
 	private final City city;
 	private final String units;
@@ -119,9 +114,7 @@ public class WeatherForecastResponse {
 	 * @throws JSONException 
 	 *  */
 	public WeatherForecastResponse (JSONObject json) {
-		this.code = json.optInt (WeatherForecastResponse.JSON_COD, Integer.MIN_VALUE);
-		this.message = json.optString (WeatherForecastResponse.JSON_MESSAGE);
-		this.calctime = json.optDouble (WeatherForecastResponse.JSON_CALCTIME, Double.NaN);
+		super (json);
 		this.url = json.optString (WeatherForecastResponse.JSON_URL);
 		JSONObject jsonCity = json.optJSONObject (WeatherForecastResponse.JSON_CITY);
 		if (jsonCity != null)
@@ -138,29 +131,8 @@ public class WeatherForecastResponse {
 				this.forecasts.add (new ForecastWeatherData (jsonForecast));
 			}
 		} else {
-			this.forecasts = null;
+			this.forecasts = Collections.emptyList ();
 		}
-	}
-
-	public boolean hasCode () {
-		return this.code != Integer.MIN_VALUE;
-	}
-	public int getCode () {
-		return this.code;
-	}
-
-	public boolean hasMessage () {
-		return this.message != null && !this.message.isEmpty ();
-	}
-	public String getMessage () {
-		return this.message;
-	}
-
-	public boolean hasCalcTime () {
-		return !Double.isNaN (this.calctime);
-	}
-	public double getCalcTime () {
-		return this.calctime;
 	}
 
 	public boolean hasUrl () {
