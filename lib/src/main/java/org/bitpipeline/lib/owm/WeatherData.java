@@ -15,26 +15,31 @@
  ***************************************************************************/
 package org.bitpipeline.lib.owm;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 public class WeatherData extends AbstractWeatherData {
 	private static final String JSON_ID   = "id";
 	private static final String JSON_NAME = "name";
 
-	private long id = Long.MIN_VALUE;
-	private String name = null;
+	private final long id;
+	private final String name;
 
-	public WeatherData (JSONObject json) throws JSONException {
+	public WeatherData (JSONObject json) {
 		super (json);
-		this.id = json.getLong (WeatherData.JSON_ID);
-		this.name = json.getString (WeatherData.JSON_NAME);
+		this.id = json.optLong (WeatherData.JSON_ID, Long.MIN_VALUE);
+		this.name = json.optString (WeatherData.JSON_NAME);
 	}
 
+	public boolean hasId () {
+		return this.id != Long.MIN_VALUE;
+	}
 	public long getId () {
 		return this.id;
 	}
 
+	public boolean hasName () {
+		return this.name != null && !this.name.isEmpty ();
+	}
 	public String getName () {
 		return this.name;
 	}

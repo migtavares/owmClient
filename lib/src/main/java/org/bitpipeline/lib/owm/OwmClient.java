@@ -24,8 +24,6 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.params.HttpMethodParams;
-import org.bitpipeline.lib.owm.log.LogInterface;
-import org.bitpipeline.lib.owm.log.SysErrLog;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -41,20 +39,15 @@ public class OwmClient {
 	private int retriesPerRequest = 3;
 
 	private HttpClient httpClient;
-	private LogInterface log;
 
 	public OwmClient () {
 		this.httpClient = new HttpClient ();
-		this.log = new SysErrLog ();
 	}
 
-	public OwmClient (HttpClient httpClient, LogInterface log) {
+	public OwmClient (HttpClient httpClient) {
 		if (httpClient == null)
 			throw new IllegalArgumentException ("Can't construct a OwmClient with a null HttpClient");
-		if (log == null)
-			throw new IllegalArgumentException ("Can't construct a OwmClient with a null LogInterface");
 		this.httpClient = httpClient;
-		this.log = log;
 	}
 
 	/** */
@@ -201,13 +194,8 @@ public class OwmClient {
 		JSONArray stationList = json.getJSONArray ("list");
 		List<WeatherData> weatherDataList = new ArrayList<WeatherData> (stationList.length ()); 
 		for (int i = 0; i < stationList.length (); i++) {
-			try {
 				weatherDataList.add (
 						new WeatherData (stationList.getJSONObject (i)));
-			} catch (JSONException jsonE) {
-				this.log.w (jsonE, "Error when parsing a weather data");
-				this.log.d (stationList.getJSONObject (i).toString (4));
-			}
 		}
 		return weatherDataList;
 	}
@@ -218,7 +206,6 @@ public class OwmClient {
 		if (this.owmAPPID != null) {
 			httpget.addRequestHeader (OwmClient.APPID_HEADER, this.owmAPPID);
 		}
-		this.log.d ("Query: %s", httpget.getURI ().toString ());
 		httpget.getParams ().setParameter (HttpMethodParams.RETRY_HANDLER,
 				new DefaultHttpMethodRetryHandler (this.retriesPerRequest, false));
 
