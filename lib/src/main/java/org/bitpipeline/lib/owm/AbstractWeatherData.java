@@ -178,20 +178,29 @@ class AbstractWeatherData {
 		}
 	}
 
-	private static class Details {
+	private static class TimedDetails {
 		private Map<Integer, Float> measurements = null;
 
-		public Details () {
+		TimedDetails () {
 		}
 
-		public Details (JSONObject json) {
-			// TODO
+		TimedDetails (JSONObject json) {
+			for (int i=1; i<=24; i++) {
+				String value = json.optString (String.format ("%dh", i));
+				if (!value.isEmpty ()) {
+					try {
+						putMeasure (i, Float.valueOf (value));
+					} catch (NumberFormatException nfe) {
+						// we just ignore this entry if we can't parse it's value.
+					}
+				}
+			}
 		}
 
 		public boolean hasMeasures ()  {
 			return this.measurements != null && this.measurements.size () > 0;
 		}
-		public void putMeasure (int lastHours, float value) {
+		private void putMeasure (int lastHours, float value) {
 			if (this.measurements == null)
 				this.measurements = new HashMap<Integer, Float> ();
 			this.measurements.put (Integer.valueOf (lastHours), Float.valueOf (value));
@@ -211,7 +220,7 @@ class AbstractWeatherData {
 		}
 	}
 
-	public static class Clouds extends Details {
+	public static class Clouds extends TimedDetails {
 		private static final String JSON_ALL = "all";
 
 		public static class CloudDescription {
@@ -334,7 +343,7 @@ class AbstractWeatherData {
 		}
 	}
 
-	public static class Precipitation extends Details {
+	public static class Precipitation extends TimedDetails {
 		private static final String JSON_TODAY = "today";
 		private final int today;
 		
