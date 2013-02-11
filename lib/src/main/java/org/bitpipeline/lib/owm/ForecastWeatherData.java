@@ -28,9 +28,9 @@ public class ForecastWeatherData extends AbstractWeatherData {
 	/**
 	 * @param json
 	 * @throws JSONException */
-	public ForecastWeatherData (JSONObject json) throws JSONException {
+	public ForecastWeatherData (JSONObject json) {
 		super (json);
-		this.calcDateTime = json.getLong (ForecastWeatherData.JSON_CALC_DT);
+		this.calcDateTime = json.optLong (ForecastWeatherData.JSON_CALC_DT, Long.MIN_VALUE);
 	}
 
 	public long getCalcDateTime () {

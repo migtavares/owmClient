@@ -41,7 +41,7 @@ public class WeatherForecastResponse {
 		private final long dtCalc;
 		private final int stationsCount;
 
-		public City (JSONObject json) throws JSONException {
+		public City (JSONObject json) {
 			this.id = json.optInt (City.JSON_ID, Integer.MIN_VALUE);
 			JSONObject jsonCoord = json.optJSONObject (City.JSON_COORD);
 			if (jsonCoord != null)
@@ -118,7 +118,7 @@ public class WeatherForecastResponse {
 	/**
 	 * @throws JSONException 
 	 *  */
-	public WeatherForecastResponse (JSONObject json) throws JSONException {
+	public WeatherForecastResponse (JSONObject json) {
 		this.code = json.optInt (WeatherForecastResponse.JSON_COD, Integer.MIN_VALUE);
 		this.message = json.optString (WeatherForecastResponse.JSON_MESSAGE);
 		this.calctime = json.optDouble (WeatherForecastResponse.JSON_CALCTIME, Double.NaN);
@@ -134,7 +134,8 @@ public class WeatherForecastResponse {
 		if (jsonForecasts != null) {
 			this.forecasts = new ArrayList<ForecastWeatherData> (jsonForecasts.length ());
 			for (int i = 0; i<jsonForecasts.length (); i++) {
-				this.forecasts.add (new ForecastWeatherData (jsonForecasts.getJSONObject (i)));
+				JSONObject jsonForecast = jsonForecasts.optJSONObject (i);
+				this.forecasts.add (new ForecastWeatherData (jsonForecast));
 			}
 		} else {
 			this.forecasts = null;
@@ -156,7 +157,7 @@ public class WeatherForecastResponse {
 	}
 
 	public boolean hasCalcTime () {
-		return this.calctime != Double.NaN;
+		return !Double.isNaN (this.calctime);
 	}
 	public double getCalcTime () {
 		return this.calctime;
