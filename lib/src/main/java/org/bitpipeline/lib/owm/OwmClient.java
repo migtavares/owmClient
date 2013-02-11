@@ -34,7 +34,10 @@ import org.json.JSONObject;
  * in http://openweathermap.org/wiki/API/JSON_API
  * @author mtavares */
 public class OwmClient {
+	static private final String APPID_HEADER = "x-api-key";
+
 	private String baseOwmUrl = "http://api.openweathermap.org/data/2.1/";
+	private String owmAPPID = null;
 	private int retriesPerRequest = 3;
 
 	private HttpClient httpClient;
@@ -47,11 +50,16 @@ public class OwmClient {
 
 	public OwmClient (HttpClient httpClient, LogInterface log) {
 		if (httpClient == null)
-			throw new IllegalArgumentException ("Can construct a OwmClient with a null HttpClient");
+			throw new IllegalArgumentException ("Can't construct a OwmClient with a null HttpClient");
 		if (log == null)
-			throw new IllegalArgumentException ("Can construct a OwmClient with a null LogInterface");
+			throw new IllegalArgumentException ("Can't construct a OwmClient with a null LogInterface");
 		this.httpClient = httpClient;
 		this.log = log;
+	}
+
+	/** */
+	public void setAPPID (String appid) {
+		this.owmAPPID = appid;
 	}
 
 	/** Find current weather around a geographic point
@@ -207,6 +215,9 @@ public class OwmClient {
 	private JSONObject doQuery (String subUrl) throws JSONException, IOException {
 		String responseBody = null;
 		GetMethod httpget = new GetMethod (this.baseOwmUrl + subUrl);
+		if (this.owmAPPID != null) {
+			httpget.addRequestHeader (OwmClient.APPID_HEADER, this.owmAPPID);
+		}
 		this.log.d ("Query: %s", httpget.getURI ().toString ());
 		httpget.getParams ().setParameter (HttpMethodParams.RETRY_HANDLER,
 				new DefaultHttpMethodRetryHandler (this.retriesPerRequest, false));

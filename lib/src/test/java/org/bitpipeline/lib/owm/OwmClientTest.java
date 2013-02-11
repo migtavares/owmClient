@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.List;
+import java.util.UUID;
 
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpException;
@@ -91,6 +92,30 @@ public class OwmClientTest {
 		for (ForecastWeatherData weatherData : forecasts) {
 			OwmClientTest.assertForecastWeatherData (weatherData);
 		}
+	}
+
+	@Test
+	public void testAPPIDHeaderRequest () throws IOException, JSONException {
+		final String appid = UUID.randomUUID ().toString ();
+		HttpClient mockHttpClient = mock (HttpClient.class);
+		when (mockHttpClient.executeMethod (any (HttpMethod.class))).then (new Answer<Integer>() {
+			@Override
+			public Integer answer (InvocationOnMock invocation) throws Throwable {
+				GetMethod getMethod = (GetMethod) invocation.getArguments ()[0];
+
+				// Check the request
+				assertEquals (appid, getMethod.getRequestHeader ("x-api-key").getValue ());
+
+				// return a valid response
+				Method setResponseStream = HttpMethodBase.class.getDeclaredMethod ("setResponseStream", InputStream.class);
+				setResponseStream.setAccessible (true);
+				setResponseStream.invoke (getMethod, new ByteArrayInputStream (TestData.CURRENT_WEATHER_AROUND_CITY_COORD.getBytes ()));
+				return HttpStatus.SC_OK;
+			}
+		});
+		OwmClient owm = new OwmClient (mockHttpClient, new SysErrLog ());
+		owm.setAPPID (appid);
+		owm.currentWeatherAtCity (55f, 37f, 10);
 	}
 
 	@Test
