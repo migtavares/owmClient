@@ -174,7 +174,17 @@ public class OwmClient {
 	 * @throws JSONException if the response from the OWM server can't be parsed
 	 * @throws IOException if there's some network error or the OWM server replies with a error. */
 	public WeatherForecastResponse forecastWeatherAtCity (int cityId) throws JSONException, IOException {
-		String subUrl = String.format ("forecast/city/%d", cityId);
+		String subUrl = String.format ("forecast/city/%d?type=json&units=metric", cityId);
+		JSONObject response = doQuery (subUrl);
+		return new WeatherForecastResponse (response);
+	}
+
+	/** Get the weather forecast for a city
+	 * @param cityName is the Name of the city
+	 * @throws JSONException if the response from the OWM server can't be parsed
+	 * @throws IOException if there's some network error or the OWM server replies with a error. */
+	public WeatherForecastResponse forecastWeatherAtCity (String cityName) throws JSONException, IOException {
+		String subUrl = String.format ("forecast/city?q=%s&type=json&units=metric", cityName);
 		JSONObject response = doQuery (subUrl);
 		return new WeatherForecastResponse (response);
 	}
@@ -192,21 +202,6 @@ public class OwmClient {
 			}
 		}
 		return weatherDataList;
-	}
-
-	private List<ForecastWeatherData> forecastWeatherListFromJSON (JSONObject json) throws JSONException {
-		JSONArray owmForecasts = json.getJSONArray ("list");
-		List<ForecastWeatherData> forecastList = new ArrayList<ForecastWeatherData> (owmForecasts.length ()); 
-		for (int i = 0; i < owmForecasts.length (); i++) {
-			try {
-				forecastList.add (
-						new ForecastWeatherData (owmForecasts.getJSONObject (i)));
-			} catch (JSONException jsonE) {
-				this.log.w (jsonE, "Error when parsing a weather forecast");
-				this.log.d (owmForecasts.getJSONObject (i).toString (4));
-			}
-		}
-		return forecastList;
 	}
 
 	private JSONObject doQuery (String subUrl) throws JSONException, IOException {
