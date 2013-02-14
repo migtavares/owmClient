@@ -36,7 +36,7 @@ public class WeatherForecastResponse extends AbstractOwmResponse {
 		static private final String JSON_STATIONS_COUNT = "stations_count";
 
 		private final int id;
-		private final AbstractWeatherData.GeoCoord coord;
+		private final LocalizedWeatherData.GeoCoord coord;
 		private final String country;
 		private final String name;
 		private final long dtCalc;
@@ -46,7 +46,7 @@ public class WeatherForecastResponse extends AbstractOwmResponse {
 			this.id = json.optInt (City.JSON_ID, Integer.MIN_VALUE);
 			JSONObject jsonCoord = json.optJSONObject (City.JSON_COORD);
 			if (jsonCoord != null)
-				this.coord = new AbstractWeatherData.GeoCoord (jsonCoord);
+				this.coord = new LocalizedWeatherData.GeoCoord (jsonCoord);
 			else
 				this.coord = null;
 			this.country = json.optString (City.JSON_COUNTRY);
@@ -65,7 +65,7 @@ public class WeatherForecastResponse extends AbstractOwmResponse {
 		public boolean hasCoordinates () {
 			return this.coord != null;
 		}
-		public AbstractWeatherData.GeoCoord getCoordinates () {
+		public LocalizedWeatherData.GeoCoord getCoordinates () {
 			return this.coord;
 		}
 
@@ -98,16 +98,44 @@ public class WeatherForecastResponse extends AbstractOwmResponse {
 		}
 	}
 
+	public static class Sys {
+		private static final String JSON_COUNTRY    = "country";
+		private static final String JSON_POPULATION = "population";
+
+		private final String country;
+		private final int population;
+
+		public Sys (JSONObject json) {
+			this.country = json.optString (Sys.JSON_COUNTRY);
+			this.population = json.optInt (Sys.JSON_POPULATION, Integer.MIN_VALUE);
+		}
+
+		public boolean hasCountry () {
+			return this.country != null && !this.country.isEmpty ();
+		}
+		public String getCountry () {
+			return this.country;
+		}
+
+		public boolean hasPopulation () {
+			return this.population != Integer.MIN_VALUE;
+		}
+		public int getPopulation () {
+			return this.population;
+		}
+	}
+
 	static private final String JSON_URL = "url";
 	static private final String JSON_CITY = "city";
 	static private final String JSON_UNITS = "units";
 	static private final String JSON_MODEL = "model";
-	static private final String JSON_LIST = "list";
+	private static final String JSON_SYS       = "sys";
 
 	private final String url;
 	private final City city;
 	private final String units;
 	private final String model;
+	private final Sys sys;
 	private final List<ForecastWeatherData> forecasts;
 
 	/**
@@ -123,7 +151,11 @@ public class WeatherForecastResponse extends AbstractOwmResponse {
 			this.city = null;
 		this.units = json.optString (WeatherForecastResponse.JSON_UNITS);
 		this.model = json.optString (WeatherForecastResponse.JSON_MODEL);
-		JSONArray jsonForecasts = json.optJSONArray (WeatherForecastResponse.JSON_LIST);
+		
+		JSONObject jsonSys = json.optJSONObject (WeatherForecastResponse.JSON_SYS);
+		this.sys = jsonSys != null ? new Sys (jsonSys) : null;
+
+		JSONArray jsonForecasts = json.optJSONArray (AbstractOwmResponse.JSON_LIST);
 		if (jsonForecasts != null) {
 			this.forecasts = new ArrayList<ForecastWeatherData> (jsonForecasts.length ());
 			for (int i = 0; i<jsonForecasts.length (); i++) {
@@ -161,6 +193,13 @@ public class WeatherForecastResponse extends AbstractOwmResponse {
 	}
 	public String getModel () {
 		return this.model;
+	}
+
+	public boolean hasSys () {
+		return this.sys != null;
+	}
+	public Sys getSys () {
+		return this.sys;
 	}
 
 	public boolean hasForecasts () {

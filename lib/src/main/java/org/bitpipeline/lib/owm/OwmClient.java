@@ -31,6 +31,10 @@ import org.json.JSONObject;
 public class OwmClient {
 	static private final String APPID_HEADER = "x-api-key";
 
+	static public enum HistoryType {
+		TICK, HOUR, DAY
+	}
+
 	private String baseOwmUrl = "http://api.openweathermap.org/data/2.1/";
 	private String owmAPPID = null;
 	private int retriesPerRequest = 3;
@@ -140,10 +144,10 @@ public class OwmClient {
 	 * @param cityId is the ID of the city
 	 * @throws JSONException if the response from the OWM server can't be parsed
 	 * @throws IOException if there's some network error or the OWM server replies with a error. */
-	public WeatherData currentWeatherAtCity (int cityId) throws IOException, JSONException {
+	public StatusWeatherData currentWeatherAtCity (int cityId) throws IOException, JSONException {
 		String subUrl = String.format ("weather/city/%d?type=json", Integer.valueOf (cityId));
 		JSONObject response = doQuery (subUrl);
-		return new WeatherData (response);
+		return new StatusWeatherData (response);
 	}
 
 	/** Find current city weather
@@ -185,6 +189,15 @@ public class OwmClient {
 		String subUrl = String.format ("forecast/city?q=%s&type=json&units=metric", cityName);
 		JSONObject response = doQuery (subUrl);
 		return new WeatherForecastResponse (response);
+	}
+
+	/** Get the weather history of a city.
+	 * @param cityId is the OWM city ID
+	 * @param type is the history type (frequency) to use. */
+	public WeatherHistoryCityResponse historyWeatherAtCity (int cityId, HistoryType type) throws JSONException, IOException {
+		String subUrl = String.format ("history/city/%d?type=%s", cityId, type);
+		JSONObject response = doQuery (subUrl);
+		return new WeatherHistoryCityResponse (response);
 	}
 
 	private JSONObject doQuery (String subUrl) throws JSONException, IOException {

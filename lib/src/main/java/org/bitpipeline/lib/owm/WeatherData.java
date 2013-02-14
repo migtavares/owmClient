@@ -15,32 +15,568 @@
  ***************************************************************************/
 package org.bitpipeline.lib.owm;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class WeatherData extends AbstractWeatherData {
-	private static final String JSON_ID   = "id";
-	private static final String JSON_NAME = "name";
+public class WeatherData {
+	private static final String JSON_DATE_TIME = "dt";
+	private static final String JSON_MAIN      = "main";
+	private static final String JSON_WIND      = "wind";
+	private static final String JSON_CLOUDS    = "clouds";
+	private static final String JSON_RAIN      = "rain";
+	private static final String JSON_SNOW      = "snow";
+	private static final String JSON_WEATHER   = "weather";
 
-	private final long id;
-	private final String name;
+	public static class GeoCoord {
+		private static final String JSON_LAT = "lat";
+		private static final String JSON_LON = "lon";
+
+		private float latitude;
+		private float longitude;
+
+		GeoCoord (JSONObject json) {
+			this.latitude = (float) json.optDouble (GeoCoord.JSON_LAT);
+			this.longitude = (float) json.optDouble (GeoCoord.JSON_LON);
+		}
+
+		public boolean hasLatitude () {
+			return this.latitude != Float.NaN;
+		}
+		public float getLatitude () {
+			return latitude;
+		}
+
+		public boolean hasLongitude () {
+			return this.longitude != Float.NaN;
+		}
+		public float getLongitude () {
+			return longitude;
+		}
+	}
+
+	public static class Main {
+		private static final String JSON_TEMP     = "temp";
+		private static final String JSON_TEMP_MIN = "temp_min";
+		private static final String JSON_TEMP_MAX = "temp_max";
+		private static final String JSON_HUMIDITY = "humidity";
+		private static final String JSON_PRESSURE = "pressure";
+
+		private final float temp;
+		private final float tempMin;
+		private final float tempMax;
+		private final float pressure;
+		private final float humidity;
+
+		public Main (JSONObject json) {
+			this.temp = (float) json.optDouble (Main.JSON_TEMP);
+			this.tempMin = (float) json.optDouble (Main.JSON_TEMP_MIN);
+			this.tempMax = (float) json.optDouble (Main.JSON_TEMP_MAX);
+			this.pressure = (float) json.optDouble (Main.JSON_PRESSURE);
+			this.humidity = (float) json.optDouble (Main.JSON_HUMIDITY);
+		}
+
+		public boolean hasTemp () {
+			return !Float.isNaN (this.temp);
+		}
+		public float getTemp () {
+			return this.temp;
+		}
+
+		public boolean hasTempMin () {
+			return !Float.isNaN (this.tempMin);
+		}
+		public float getTempMin () {
+			return this.tempMin;
+		}
+
+		public boolean hasTempMax () {
+			return !Float.isNaN (this.tempMax);
+		}
+		public float getTempMax () {
+			return this.tempMax;
+		}
+
+		public boolean hasPressure () {
+			return !Float.isNaN (this.pressure);
+		}
+		public float getPressure () {
+			return this.pressure;
+		}
+
+		public boolean hasHumidity () {
+			return !Float.isNaN (this.humidity);
+		}
+		public float getHumidity () {
+			return this.humidity;
+		}
+	}
+
+	public static class Wind {
+		private static final String JSON_SPEED   = "speed";
+		private static final String JSON_DEG     = "deg";
+		private static final String JSON_GUST    = "gust";
+		private static final String JSON_VAR_BEG = "var_beg";
+		private static final String JSON_VAR_END = "var_end";
+
+		private final float speed;
+		private final int deg;
+		private final float gust;
+		private final int varBeg;
+		private final int varEnd;
+
+		public Wind (JSONObject json) {
+			this.speed = (float) json.optDouble (Wind.JSON_SPEED);
+			this.deg = json.optInt (Wind.JSON_DEG, Integer.MIN_VALUE);
+			this.gust = (float) json.optDouble (Wind.JSON_GUST);
+			this.varBeg = json.optInt (Wind.JSON_VAR_BEG, Integer.MIN_VALUE);
+			this.varEnd = json.optInt (Wind.JSON_VAR_END, Integer.MIN_VALUE);
+		}
+
+		public boolean hasSpeed () {
+			return !Float.isNaN (this.speed);
+		}
+		public float getSpeed () {
+			return this.speed;
+		}
+
+		public boolean hasDeg () {
+			return this.deg != Integer.MIN_VALUE;
+		}
+		public int getDeg () {
+			return this.deg;
+		}
+
+		public boolean hasGust () {
+			return !Float.isNaN (this.gust);
+		}
+		public float getGust () {
+			return this.gust;
+		}
+
+		public boolean hasVarBeg () {
+			return this.varBeg != Integer.MIN_VALUE;
+		}
+		public int getVarBeg () {
+			return this.varBeg;
+		}
+
+		public boolean hasVarEnd () {
+			return this.varEnd != Integer.MIN_VALUE;
+		}
+		public int getVarEnd () {
+			return this.varEnd;
+		}
+	}
+
+	private static class TimedDetails {
+		private Map<Integer, Float> measurements = null;
+
+		TimedDetails () {
+		}
+
+		TimedDetails (JSONObject json) {
+			for (int i=1; i<=24; i++) {
+				String value = json.optString (String.format ("%dh", i));
+				if (!value.isEmpty ()) {
+					try {
+						putMeasure (i, Float.valueOf (value));
+					} catch (NumberFormatException nfe) {
+						// we just ignore this entry if we can't parse it's value.
+					}
+				}
+			}
+		}
+
+		public boolean hasMeasures ()  {
+			return this.measurements != null && this.measurements.size () > 0;
+		}
+		private void putMeasure (int lastHours, float value) {
+			if (this.measurements == null)
+				this.measurements = new HashMap<Integer, Float> ();
+			this.measurements.put (Integer.valueOf (lastHours), Float.valueOf (value));
+		}
+		public float getMeasure (int lastHours) {
+			Float value = this.measurements.get (Integer.valueOf (lastHours));
+			return value != null? value.floatValue () : Float.NaN;
+		}
+		public float getMeasure (Integer lastHours) {
+			Float value = this.measurements.get (lastHours);
+			return value != null? value.floatValue () : Float.NaN;
+		}
+		public Set<Integer> measurements () {
+			if (this.measurements == null)
+				return Collections.emptySet ();
+			return this.measurements.keySet ();
+		}
+	}
+
+	public static class Clouds extends TimedDetails {
+		private static final String JSON_ALL = "all";
+
+		public static class CloudDescription {
+			private static final String JSON_DISTANCE = "distance";
+			private static final String JSON_CONDITION = "condition";
+			private static final String JSON_CUMULUS = "cumulus";
+
+			public static enum SkyCondition {
+				UNKNOWN ("unknown"),
+				FEW ("few [12.5%, 25%]"),
+				SCT ("scattered [37.5%, 50%]"),
+				BKN ("broken sky [62%, 87.5%]"),
+				OVC ("overcast {100%}"),
+				VV ("vertical visibility");
+
+				private final String description;
+
+				private SkyCondition (String description) {
+					this.description = description;
+				}
+
+				public String getDescription () {
+					return this.description;
+				}
+			}
+
+			public static enum Cumulus {
+				UNKNOWN ("unknown"),
+				TCU ("towering cumulus"),
+				CB ("cumulonimbus"),
+				ACC ("altocumulus castellanus");
+
+				private final String description;
+
+				private Cumulus (String description) {
+					this.description = description;
+				}
+
+				public String getDescription () {
+					return this.description;
+				}
+			}
+
+			private SkyCondition skyCondition = null;
+			private Cumulus cumulus = null;
+			private final int distance;
+
+			public CloudDescription (JSONObject json) {
+				this.distance = json.optInt (CloudDescription.JSON_DISTANCE, Integer.MIN_VALUE);
+				if (json.has (CloudDescription.JSON_CONDITION)) {
+					try {
+						this.skyCondition = SkyCondition.valueOf (json.optString (CloudDescription.JSON_CONDITION));
+					} catch (IllegalArgumentException e) {
+						this.skyCondition = SkyCondition.UNKNOWN;
+					}
+				}
+				if (json.has (CloudDescription.JSON_CUMULUS)) {
+					try {
+						this.cumulus = Cumulus.valueOf (json.optString (CloudDescription.JSON_CUMULUS));
+					} catch (IllegalArgumentException e) {
+						this.cumulus = Cumulus.UNKNOWN;
+					}
+				}
+			}
+
+			public boolean hasDistance () {
+				return this.distance != Integer.MIN_VALUE;
+			}
+			public int getDistance () {
+				return this.distance;
+			}
+
+			public boolean hasSkyCondition () {
+				return this.skyCondition != null;
+			}
+			public SkyCondition getSkyCondition () {
+				return this.skyCondition;
+			}
+
+			public boolean hasCumulus () {
+				return this.cumulus != null;
+			}
+			public Cumulus getCumulus () {
+				return this.cumulus;
+			}
+		}
+
+		private final int all;
+		private final List<CloudDescription> conditions;
+
+		public Clouds (JSONObject json) {
+			super (json);
+			this.all = json.optInt (Clouds.JSON_ALL, Integer.MIN_VALUE);
+			this.conditions = Collections.emptyList ();
+		}
+
+		public Clouds (JSONArray jsonArray) {
+			this.all = Integer.MIN_VALUE;
+			this.conditions = new ArrayList<CloudDescription> (jsonArray.length ());
+			for (int i = 0; i < jsonArray.length (); i++) {
+				JSONObject jsonCloudDescription = jsonArray.optJSONObject (i);
+				if (jsonCloudDescription != null)
+					this.conditions.add (
+							new CloudDescription (jsonCloudDescription));
+			}
+		}
+
+		public boolean hasAll () {
+			return this.all != Integer.MIN_VALUE;
+		}
+		public int getAll () {
+			return this.all;
+		}
+
+		public boolean hasConditions () {
+			return this.conditions != null && ! this.conditions.isEmpty ();
+		}
+		public List<CloudDescription> getConditions () {
+			return this.conditions;
+		}
+	}
+
+	public static class Precipitation extends TimedDetails {
+		private static final String JSON_TODAY = "today";
+		private final int today;
+		
+		public Precipitation (JSONObject json) {
+			super (json);
+			this.today = json.optInt (Precipitation.JSON_TODAY, Integer.MIN_VALUE);
+		}
+
+		public boolean hasToday () {
+			return this.today != Integer.MIN_VALUE;
+		}
+		public int getToday () {
+			return this.today;
+		}
+	}
+
+	public static class WeatherCondition {
+		public static enum ConditionCode {
+			UNKNOWN                         (Integer.MIN_VALUE),
+			/* Thunderstorm */
+			THUNDERSTORM_WITH_LIGHT_RAIN    (200),
+			THUNDERSTORM_WITH_RAIN          (201),
+			THUNDERSTORM_WITH_HEAVY_RAIN    (202),
+			LIGHT_THUNDERSTORM              (210),
+			THUNDERSTORM                    (211),
+			HEAVY_THUNDERSTORM              (212),
+			RAGGED_THUNDERSTORM             (221),
+			THUNDERSTORM_WITH_LIGHT_DRIZZLE (230),
+			THUNDERSTORM_WITH_DRIZZLE       (231),
+			THUNDERSTORM_WITH_HEAVY_DRIZZLE (232),
+			/* Drizzle */
+			LIGHT_INTENSITY_DRIZZLE         (300),
+			DRIZZLE                         (301),
+			HEAVY_INTENSITY_DRIZZLE         (302),
+			LIGHT_INTENSITY_DRIZZLE_RAIN    (310),
+			DRIZZLE_RAIN                    (311),
+			HEAVY_INTENSITY_DRIZZLE_RAIN    (312),
+			SHOWER_DRIZZLE                  (321),
+			/* Rain */
+			LIGHT_RAIN                      (500),
+			MODERATE_RAIN                   (501),
+			HEAVY_INTENSITY_RAIN            (502),
+			VERY_HEAVY_RAIN                 (503),
+			EXTREME_RAIN                    (504),
+			FREEZING_RAIN                   (511),
+			LIGHT_INTENSITY_SHOWER_RAIN     (520),
+			SHOWER_RAIN                     (521),
+			HEAVY_INTENSITY_SHOWER_RAIN     (522),
+			/* Snow */
+			LIGHT_SNOW                      (600),
+			SNOW                            (601),
+			HEAVY_SNOW                      (602),
+			SLEET                           (611),
+			SHOWER_SNOW                     (621),
+			/* Atmosphere */
+			MIST                            (701),
+			SMOKE                           (711),
+			HAZE                            (721),
+			SAND_OR_DUST_WHIRLS             (731),
+			FOG                             (741),
+			/* Clouds */
+			SKY_IS_CLEAR                    (800),
+			FEW_CLOUDS                      (801),
+			SCATTERED_CLOUDS                (802),
+			BROKEN_CLOUDS                   (803),
+			OVERCAST_CLOUDS                 (804),
+			/* Extreme */
+			TORNADO                         (900),
+			TROPICAL_STORM                  (901),
+			HURRICANE                       (902),
+			COLD                            (903),
+			HOT                             (904),
+			WINDY                           (905),
+			HAIL                            (906);
+
+			private int id;
+			private ConditionCode (int code) {
+				this.id = code;
+			}
+
+			static public ConditionCode valueof (int id) {
+				for (ConditionCode condition : ConditionCode.values ()) {
+					if (condition.id == id)
+						return condition;
+				}
+				return ConditionCode.UNKNOWN;
+			}
+
+			public int getId () {
+				return this.id;
+			}
+		}
+		
+		private static final String JSON_ID = "id";
+		private static final String JSON_MAIN = "main";
+		private static final String JSON_DESCRIPTION = "description";
+		private static final String JSON_ICON = "icon";
+
+		private ConditionCode code = null;
+		private String main = null;
+		private String description = null;
+		private String iconName = null;
+
+		public WeatherCondition (JSONObject json) {
+			this.code = ConditionCode.valueof (json.optInt (WeatherCondition.JSON_ID, Integer.MIN_VALUE));
+			this.main = json.optString (WeatherCondition.JSON_MAIN);
+			this.description = json.optString (WeatherCondition.JSON_DESCRIPTION);
+			this.iconName = json.optString (WeatherCondition.JSON_ICON);
+		}
+
+		public ConditionCode getCode () {
+			return this.code;
+		}
+
+		public boolean hasMain () {
+			return this.main != null && !this.main.isEmpty ();
+		}
+		public String getMain () {
+			return this.main;
+		}
+
+		public boolean hasDescription () {
+			return this.description != null && !this.description.isEmpty ();
+		}
+		public String getDescription () {
+			return this.description;
+		}
+
+		public boolean hasIconName () {
+			return this.iconName != null && !this.iconName.isEmpty ();
+		}
+		public String getIconName () {
+			return this.iconName;
+		}
+	}
+
+	private final long dateTime;
+	private final Main main;
+	private final Wind wind;
+	private final Clouds clouds;
+	private final Precipitation rain;
+	private final Precipitation snow;
+	private final List<WeatherCondition> weatherConditions;
 
 	public WeatherData (JSONObject json) {
-		super (json);
-		this.id = json.optLong (WeatherData.JSON_ID, Long.MIN_VALUE);
-		this.name = json.optString (WeatherData.JSON_NAME);
+		this.dateTime = json.optLong (WeatherData.JSON_DATE_TIME, Long.MIN_VALUE);
+
+		JSONObject jsonMain = json.optJSONObject (WeatherData.JSON_MAIN);
+		this.main = jsonMain != null ? new Main (jsonMain) : null;
+
+		JSONObject jsonWind = json.optJSONObject (WeatherData.JSON_WIND);
+		this.wind = jsonWind != null ? new Wind (jsonWind) : null;
+
+		if (json.has (WeatherData.JSON_CLOUDS)) {
+			JSONArray coudsArray = json.optJSONArray (WeatherData.JSON_CLOUDS);
+			if (coudsArray != null)
+				this.clouds = new Clouds (coudsArray);
+			else {
+				JSONObject cloudsObj = json.optJSONObject (WeatherData.JSON_CLOUDS);
+				if (cloudsObj != null)
+					this.clouds = new Clouds (cloudsObj);
+				else
+					this.clouds = null;
+			}
+		} else
+			this.clouds = null;
+
+		JSONObject jsonRain = json.optJSONObject (WeatherData.JSON_RAIN);
+		this.rain = jsonRain != null ? new Precipitation (jsonRain) : null;
+
+		JSONObject jsonSnow = json.optJSONObject (WeatherData.JSON_SNOW);
+		this.snow = jsonSnow != null ? new Precipitation (jsonSnow) : null;
+
+		if (json.has (WeatherData.JSON_WEATHER)) {
+			JSONArray jsonConditions = json.optJSONArray (WeatherData.JSON_WEATHER);
+			if (jsonConditions != null) {
+				this.weatherConditions = new ArrayList<WeatherCondition> (jsonConditions.length ());
+				if (jsonConditions != null) {
+					for (int i = 0; i < jsonConditions.length (); i++) {
+						JSONObject jsonCondition = jsonConditions.optJSONObject (i);
+						if (jsonCondition != null)
+							this.weatherConditions.add (
+									new WeatherCondition (jsonCondition));
+					}
+				}
+			} else {
+				this.weatherConditions = Collections.emptyList ();
+			}
+		} else {
+			this.weatherConditions = Collections.emptyList ();
+		}
 	}
 
-	public boolean hasId () {
-		return this.id != Long.MIN_VALUE;
-	}
-	public long getId () {
-		return this.id;
+	public long getDateTime () {
+		return this.dateTime;
 	}
 
-	public boolean hasName () {
-		return this.name != null && !this.name.isEmpty ();
+	public boolean hasMain () {
+		return this.main != null;
 	}
-	public String getName () {
-		return this.name;
+	public Main getMain () {
+		return this.main;
+	}
+
+	public boolean hasWind () {
+		return this.wind != null;
+	}
+	public Wind getWind () {
+		return this.wind;
+	}
+
+	public boolean hasClouds () {
+		return this.clouds != null;
+	}
+	public Clouds getClouds () {
+		return this.clouds;
+	}
+
+	public boolean hasRain () {
+		return this.rain != null;
+	}
+	public Precipitation getRain () {
+		return this.rain;
+	}
+
+	public boolean hasSnow () {
+		return this.snow != null;
+	}
+	public Precipitation getSnow () {
+		return this.snow;
+	}
+
+	public boolean hasWeatherConditions () {
+		return this.weatherConditions != null && !this.weatherConditions.isEmpty ();
+	}
+	public List<WeatherCondition> getWeatherConditions () {
+		return this.weatherConditions;
 	}
 }

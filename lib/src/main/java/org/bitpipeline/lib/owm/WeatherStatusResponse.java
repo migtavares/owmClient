@@ -26,23 +26,21 @@ import org.json.JSONObject;
  * 
  * @author mtavares */
 public class WeatherStatusResponse extends AbstractOwmResponse {
-	static private final String JSON_LIST = "list";
-
-	private final List<WeatherData> status;
+	private final List<StatusWeatherData> status;
 
 	/**
 	 * @param json */
 	public WeatherStatusResponse (JSONObject json) {
 		super (json);
-		JSONArray jsonWeatherStatus = json.optJSONArray (WeatherStatusResponse.JSON_LIST);
+		JSONArray jsonWeatherStatus = json.optJSONArray (AbstractOwmResponse.JSON_LIST);
 		if (jsonWeatherStatus == null) {
 			this.status = Collections.emptyList ();
 		} else {
-			this.status = new ArrayList<WeatherData> (jsonWeatherStatus.length ());
+			this.status = new ArrayList<StatusWeatherData> (jsonWeatherStatus.length ());
 			for (int i = 0; i <jsonWeatherStatus.length (); i++) {
 				JSONObject jsonStatus = jsonWeatherStatus.optJSONObject (i);
 				if (jsonStatus != null) {
-					this.status.add (new WeatherData (jsonStatus));
+					this.status.add (new StatusWeatherData (jsonStatus));
 				}
 			}
 		}
@@ -51,7 +49,7 @@ public class WeatherStatusResponse extends AbstractOwmResponse {
 	public boolean hasWeatherStatus () {
 		return this.status != null && !this.status.isEmpty ();
 	}
-	public List<WeatherData> getWeatherStatus () {
+	public List<StatusWeatherData> getWeatherStatus () {
 		return this.status;
 	}
 }

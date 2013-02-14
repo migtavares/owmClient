@@ -36,6 +36,7 @@ import org.apache.commons.httpclient.HttpMethod;
 import org.apache.commons.httpclient.HttpMethodBase;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.bitpipeline.lib.owm.OwmClient.HistoryType;
 import org.bitpipeline.lib.owm.WeatherForecastResponse.City;
 import org.json.JSONException;
 import org.junit.Test;
@@ -62,7 +63,7 @@ public class OwmClientTest {
 		return mockHttpClient;
 	}
 
-	private static void assertWeatherData (WeatherData weatherData) {
+	private static void assertWeatherData (StatusWeatherData weatherData) {
 		assertNotNull (weatherData);
 		assertNotNull (weatherData.getName ());
 		assertFalse (weatherData.getId () == Long.MIN_VALUE);
@@ -70,10 +71,10 @@ public class OwmClientTest {
 		assertTrue (weatherData.hasMain ());
 	}
 
-	private static void assertWeatherDataList (List<WeatherData> weatherDataList, int maxData) {
+	private static void assertWeatherDataList (List<StatusWeatherData> weatherDataList, int maxData) {
 		assertNotNull (weatherDataList);
 		assertTrue (weatherDataList.size () <= maxData);
-		for (WeatherData weatherData : weatherDataList) {
+		for (StatusWeatherData weatherData : weatherDataList) {
 			OwmClientTest.assertWeatherData (weatherData);
 		}
 	}
@@ -175,7 +176,7 @@ public class OwmClientTest {
 	public void testCurrentWeatherAtCityId () throws HttpException, IOException, JSONException {
 		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.CURRENT_WEATHER_AT_CITY_ID_MOSKOW);
 		OwmClient owm = new OwmClient (mockHttpClient);
-		WeatherData weatherData = owm.currentWeatherAtCity (524901);
+		StatusWeatherData weatherData = owm.currentWeatherAtCity (524901);
 		assertEquals ("Moscow", weatherData.getName ());
 		assertEquals (524901, weatherData.getId ());
 		OwmClientTest.assertWeatherData (weatherData);
@@ -188,7 +189,7 @@ public class OwmClientTest {
 		WeatherStatusResponse currentWeather = owm.currentWeatherAtCity ("london");
 		assertTrue (currentWeather.hasWeatherStatus ());
 		OwmClientTest.assertWeatherDataList (currentWeather.getWeatherStatus (), Integer.MAX_VALUE);
-		for (WeatherData weather : currentWeather.getWeatherStatus ()) {
+		for (StatusWeatherData weather : currentWeather.getWeatherStatus ()) {
 			assertTrue ("london".equalsIgnoreCase (weather.getName ()));
 		}
 	}
@@ -200,7 +201,7 @@ public class OwmClientTest {
 		WeatherStatusResponse currentWeather = owm.currentWeatherAtCity ("london", "UK");
 		assertTrue (currentWeather.hasWeatherStatus ());
 		OwmClientTest.assertWeatherDataList (currentWeather.getWeatherStatus (), Integer.MAX_VALUE);
-		for (WeatherData weather : currentWeather.getWeatherStatus ()) {
+		for (StatusWeatherData weather : currentWeather.getWeatherStatus ()) {
 			assertTrue ("london".equalsIgnoreCase (weather.getName ()));
 		}
 	}
@@ -227,5 +228,17 @@ public class OwmClientTest {
 		assertTrue ("PT".equalsIgnoreCase (lisbon.getCountryCode ()));
 		assertTrue ("Lisbon".equalsIgnoreCase (lisbon.getName ()));
 		OwmClientTest.assertForecastWeatherDataList (forecastResponse.getForecasts (), Integer.MAX_VALUE);
+	}
+
+	@Test
+	public void testHistoryWeatherAtCity () throws HttpException, IOException, JSONException {
+		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.HISTORY_WEATHER_AT_CITY_ID);
+		OwmClient owm = new OwmClient (mockHttpClient);
+		WeatherHistoryCityResponse history = owm.historyWeatherAtCity (2885679, HistoryType.HOUR);
+		assertEquals (0.0186d, history.getCalcTime (), 0.0001d);
+		assertEquals (0.0056d, history.getCalcTimeFetch (), 0.0001d);
+		assertEquals (0.0131d, history.getCalcTimeFind (), 0.0001d);
+		assertEquals (2885679, history.getCityId ());
+		assertTrue (history.hasHistory ());
 	}
 }

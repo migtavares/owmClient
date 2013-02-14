@@ -15,25 +15,32 @@
  ***************************************************************************/
 package org.bitpipeline.lib.owm;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
-/**
- * @author mtavares */
-public class ForecastWeatherData extends LocalizedWeatherData {
-	static private final String JSON_CALC_DT = "calc_dt";
+public class StatusWeatherData extends LocalizedWeatherData {
+	private static final String JSON_ID   = "id";
+	private static final String JSON_NAME = "name";
 
-	private long calcDateTime = Long.MIN_VALUE;
-	
-	/**
-	 * @param json
-	 * @throws JSONException */
-	public ForecastWeatherData (JSONObject json) {
+	private final long id;
+	private final String name;
+
+	public StatusWeatherData (JSONObject json) {
 		super (json);
-		this.calcDateTime = json.optLong (ForecastWeatherData.JSON_CALC_DT, Long.MIN_VALUE);
+		this.id = json.optLong (StatusWeatherData.JSON_ID, Long.MIN_VALUE);
+		this.name = json.optString (StatusWeatherData.JSON_NAME);
 	}
 
-	public long getCalcDateTime () {
-		return this.calcDateTime;
+	public boolean hasId () {
+		return this.id != Long.MIN_VALUE;
+	}
+	public long getId () {
+		return this.id;
+	}
+
+	public boolean hasName () {
+		return this.name != null && !this.name.isEmpty ();
+	}
+	public String getName () {
+		return this.name;
 	}
 }
