@@ -183,6 +183,41 @@ public class OwmClientTest {
 	}
 
 	@Test
+	public void testCurrentWeatherAtStationId () throws HttpException, IOException, JSONException {
+		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.CURRENT_WEATHER_AT_STATION_ID_9040);
+		OwmClient owm = new OwmClient (mockHttpClient);
+		StatusWeatherData weatherData = owm.currentWeatherAtStation (9040);
+		assertEquals ("CT1AKV-10", weatherData.getName ());
+		assertEquals (9040, weatherData.getId ());
+		assertEquals (1360924205, weatherData.getDateTime ());
+
+		assertTrue (weatherData.hasMain ());
+		assertEquals (  281.48f, weatherData.getMain ().getTemp (),     0.001f);
+		assertEquals (  99f,     weatherData.getMain ().getHumidity (), 0.001f);
+		assertEquals (1016f,     weatherData.getMain ().getPressure (), 0.001f);
+		
+		assertTrue (weatherData.hasWind ());
+		assertEquals (0f, weatherData.getWind ().getSpeed (), 0.001f);
+		assertEquals (0f, weatherData.getWind ().getGust (),  0.001f);
+		assertEquals (0, weatherData.getWind ().getDeg ());
+		
+		assertTrue (weatherData.hasRain ());
+		assertEquals (2,  weatherData.getRain ().measurements ().size ());
+		assertEquals (0f, weatherData.getRain ().getMeasure (1),  0.001f);
+		assertEquals (0f, weatherData.getRain ().getMeasure (24), 0.001f);
+		assertEquals (0,  weatherData.getRain ().getToday ());
+		
+		assertTrue (weatherData.hasCoord ());
+		assertTrue (weatherData.getCoord ().hasLongitude ());
+		assertTrue (weatherData.getCoord ().hasLatitude ());
+		assertEquals (-8.7363f, weatherData.getCoord ().getLongitude (), 0.00001f);
+		assertEquals (39.1862f, weatherData.getCoord ().getLatitude (),  0.00001f);
+		
+		assertTrue (weatherData.hasStation ());
+		assertEquals (7, weatherData.getStation ().getZoom ());
+	}
+
+	@Test
 	public void testCurrentWeatherAtCityName () throws HttpException, IOException, JSONException {
 		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.CURRENT_WEATHER_AT_CITY_NAME_LONDON);
 		OwmClient owm = new OwmClient (mockHttpClient);
@@ -231,7 +266,7 @@ public class OwmClientTest {
 	}
 
 	@Test
-	public void testHistoryWeatherAtCity () throws HttpException, IOException, JSONException {
+	public void testHourHistoryWeatherAtCity () throws HttpException, IOException, JSONException {
 		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.HISTORY_WEATHER_AT_CITY_ID);
 		OwmClient owm = new OwmClient (mockHttpClient);
 		WeatherHistoryCityResponse history = owm.historyWeatherAtCity (2885679, HistoryType.HOUR);
@@ -241,4 +276,17 @@ public class OwmClientTest {
 		assertEquals (2885679, history.getCityId ());
 		assertTrue (history.hasHistory ());
 	}
+
+	@Test
+	public void testTickHistoryWeatherAtStation () throws HttpException, IOException, JSONException {
+		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.HISTORY_WEATHER_AT_STATION_ID_BY_TICK);
+		OwmClient owm = new OwmClient (mockHttpClient);
+		WeatherHistoryStationResponse history = owm.historyWeatherAtStation (9040, HistoryType.TICK);
+		assertEquals (1.5991d, history.getCalcTime (), 0.0001d);
+		assertEquals (0.0456d, history.getCalcTimeTick (), 0.0001d);
+		assertEquals (9040, history.getStationId ());
+		assertEquals (OwmClient.HistoryType.TICK, history.getType ());
+		assertTrue (history.hasHistory ());
+	}
+
 }

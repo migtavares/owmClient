@@ -32,7 +32,8 @@ public class OwmClient {
 	static private final String APPID_HEADER = "x-api-key";
 
 	static public enum HistoryType {
-		TICK, HOUR, DAY
+		UNKNOWN,
+		TICK, HOUR, DAY 
 	}
 
 	private String baseOwmUrl = "http://api.openweathermap.org/data/2.1/";
@@ -150,6 +151,16 @@ public class OwmClient {
 		return new StatusWeatherData (response);
 	}
 
+	/** Find current station weather report
+	 * @param stationId is the ID of the station
+	 * @throws JSONException if the response from the OWM server can't be parsed
+	 * @throws IOException if there's some network error or the OWM server replies with a error. */
+	public StatusWeatherData currentWeatherAtStation (int stationId) throws IOException, JSONException {
+		String subUrl = String.format ("weather/station/%d?type=json", Integer.valueOf (stationId));
+		JSONObject response = doQuery (subUrl);
+		return new StatusWeatherData (response);
+	}
+
 	/** Find current city weather
 	 * @param cityName is the name of the city
 	 * @throws JSONException if the response from the OWM server can't be parsed
@@ -195,9 +206,25 @@ public class OwmClient {
 	 * @param cityId is the OWM city ID
 	 * @param type is the history type (frequency) to use. */
 	public WeatherHistoryCityResponse historyWeatherAtCity (int cityId, HistoryType type) throws JSONException, IOException {
+		if (type == HistoryType.UNKNOWN)
+			throw new IllegalArgumentException("Can't do a historic request for unknown type of history.");
 		String subUrl = String.format ("history/city/%d?type=%s", cityId, type);
 		JSONObject response = doQuery (subUrl);
 		return new WeatherHistoryCityResponse (response);
+	}
+
+	/** Get the weather history of a city.
+	 * @param stationId is the OWM station ID
+	 * @param type is the history type (frequency) to use. */
+	public WeatherHistoryStationResponse historyWeatherAtStation (int stationId, HistoryType type) throws JSONException, IOException {
+		if (type == HistoryType.UNKNOWN)
+			throw new IllegalArgumentException("Can't do a historic request for unknown type of history.");
+		if (type != HistoryType.TICK) {
+			throw new RuntimeException ("Not yet implemented. The houry and daily history station response is quite diferent from other responses.");
+		}
+		String subUrl = String.format ("history/station/%d?type=%s", stationId, type);
+		JSONObject response = doQuery (subUrl);
+		return new WeatherHistoryStationResponse (response);
 	}
 
 	private JSONObject doQuery (String subUrl) throws JSONException, IOException {
