@@ -58,7 +58,26 @@ For enumerations there's a special value `UNKNOWN` that means that although a va
 
 Actually we should also check if there are hourly reports of rain by calling `rain.measurements ()`which would give us a set of integers that represent the hours of the measurement. Then we can get each of the measure by calling `rain.getMeasure (intHour)`.
 
-# License
+# Basic Weather Data Structure
+
+	                 +-------------+
+	                 | WeatherData |
+	                 +-----·-------+
+	                      /_\
+                           |
+                           |
+	            +----------------------+
+	            | LocalizedWeatherData |
+	            +---·--------------·---+
+                   /_\            /_\
+				    |              |
+               +----+              +----+
+	           |                        |
+	+---------------------+   +-------------------+
+	| ForecastWeatherData |   | StatusWeatherData |
+	+---------------------+   +-------------------+
+
+# License												
 Copyright 2013 J. Miguel P. Tavares
 
 Licensed under the Apache License, Version 2.0 (the "License")
