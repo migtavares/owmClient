@@ -21,7 +21,7 @@ limitations under the License.
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>org.bitpipeline.lib</groupId>
-	<artifactId>owm-map</artifactId>
+	<artifactId>owm-lib</artifactId>
 	<name>OpenWeatherMap library</name>
 	<version>2.1.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
