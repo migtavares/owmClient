@@ -15,21 +15,21 @@ abstract class AbstractOwmResponse {
 
 	private final int code;
 	private final String message;
-	private final double calctime;
+	private final float calctime;
 
 	public AbstractOwmResponse (JSONObject json) {
 		this.code = json.optInt (AbstractOwmResponse.JSON_COD, Integer.MIN_VALUE);
 		this.message = json.optString (AbstractOwmResponse.JSON_MESSAGE);
 		String calcTimeStr = json.optString (AbstractOwmResponse.JSON_CALCTIME);
-		double calcTimeTotal = Double.NaN;
+		float calcTimeTotal = Float.NaN;
 		if (!calcTimeStr.isEmpty ()) {
 			try {
-				calcTimeTotal = Double.valueOf (calcTimeStr); 
+				calcTimeTotal = Float.valueOf (calcTimeStr); 
 			} catch (NumberFormatException nfe) { // So.. it's not a number.. let's see if we can still find it's value.
 				String totalCalcTimeStr = AbstractOwmResponse.getValueStrFromCalcTimePart (calcTimeStr, AbstractOwmResponse.JSON_CALCTIME_TOTAL);
 				if (totalCalcTimeStr != null) {
 					try {
-						calcTimeTotal = Double.valueOf (totalCalcTimeStr);
+						calcTimeTotal = Float.valueOf (totalCalcTimeStr);
 					} catch (NumberFormatException nfe2) {
 						// we tried... tried and fail. Oh despair!
 					}
@@ -69,15 +69,17 @@ abstract class AbstractOwmResponse {
 		return null;
 	}
 
-	static double getValueFromCalcTimeStr (final String calcTimeStr, final String part) {
+	static float getValueFromCalcTimeStr (final String calcTimeStr, final String part) {
 		if (calcTimeStr == null || calcTimeStr.isEmpty ())
-			return Double.NaN;
-		double value = Double.NaN;
+			return Float.NaN;
+		float value = Float.NaN;
 		String valueStr = AbstractOwmResponse.getValueStrFromCalcTimePart (calcTimeStr, part);
-		try {
-			value = Double.valueOf (valueStr);
-		} catch (NumberFormatException nfe) {
-			// Unparsable double... just leave it as NaN
+		if (valueStr != null) {
+			try {
+				value = Float.valueOf (valueStr);
+			} catch (NumberFormatException nfe) {
+				// Unparsable double... just leave it as NaN
+			}
 		}
 		return value;
 	}

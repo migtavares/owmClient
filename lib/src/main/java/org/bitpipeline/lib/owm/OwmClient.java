@@ -219,9 +219,6 @@ public class OwmClient {
 	public WeatherHistoryStationResponse historyWeatherAtStation (int stationId, HistoryType type) throws JSONException, IOException {
 		if (type == HistoryType.UNKNOWN)
 			throw new IllegalArgumentException("Can't do a historic request for unknown type of history.");
-		if (type != HistoryType.TICK) {
-			throw new RuntimeException ("Not yet implemented. The houry and daily history station response is quite diferent from other responses.");
-		}
 		String subUrl = String.format ("history/station/%d?type=%s", stationId, type);
 		JSONObject response = doQuery (subUrl);
 		return new WeatherHistoryStationResponse (response);

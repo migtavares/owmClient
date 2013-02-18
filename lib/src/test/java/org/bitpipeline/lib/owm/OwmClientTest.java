@@ -202,10 +202,10 @@ public class OwmClientTest {
 		assertEquals (0, weatherData.getWind ().getDeg ());
 		
 		assertTrue (weatherData.hasRain ());
-		assertEquals (2,  weatherData.getRain ().measurements ().size ());
-		assertEquals (0f, weatherData.getRain ().getMeasure (1),  0.001f);
-		assertEquals (0f, weatherData.getRain ().getMeasure (24), 0.001f);
-		assertEquals (0,  weatherData.getRain ().getToday ());
+		assertEquals (2,  weatherData.getRainObj ().measurements ().size ());
+		assertEquals (0f, weatherData.getRainObj ().getMeasure (1),  0.001f);
+		assertEquals (0f, weatherData.getRainObj ().getMeasure (24), 0.001f);
+		assertEquals (0,  weatherData.getRainObj ().getToday ());
 		
 		assertTrue (weatherData.hasCoord ());
 		assertTrue (weatherData.getCoord ().hasLongitude ());
@@ -289,4 +289,27 @@ public class OwmClientTest {
 		assertTrue (history.hasHistory ());
 	}
 
+	@Test
+	public void testHourlyHistoryWeatherAtStation () throws HttpException, IOException, JSONException {
+		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.HISTORY_WEATHER_AT_STATION_ID_BY_HOUR);
+		OwmClient owm = new OwmClient (mockHttpClient);
+		WeatherHistoryStationResponse historyResponse = owm.historyWeatherAtStation (9040, HistoryType.HOUR);
+		assertNotNull  (historyResponse);
+		List<AbstractWeatherData> history = historyResponse.getHistory ();
+		assertNotNull (history);
+		assertTrue (history.size () == 14);
+		AbstractWeatherData weather = history.get (0);
+		assertNotNull (weather);
+		assertEquals (289.26f, weather.getTemp (), 0.001f);
+		assertEquals (1019f, weather.getPressure (), 0.01f);
+		assertEquals (99f, weather.getHumidity (), 0.01f);
+		// wind
+		assertEquals (0f, weather.getWindSpeed (), 0.01f);
+		assertEquals (0f, weather.getWindGust (), 0.01f);
+		assertEquals (Integer.MIN_VALUE, weather.getWindDeg ());
+		// rain, snow and precipitation
+		assertEquals (0, weather.getRain ());
+		assertEquals (Integer.MIN_VALUE, weather.getSnow ());
+		assertEquals (0, weather.getPrecipitation ());
+	}
 }

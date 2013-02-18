@@ -30,18 +30,16 @@ public class WeatherHistoryStationResponse extends AbstractOwmResponse {
 	static private final String JSON_STATION_ID    = "station_id";
 	static private final String JSON_TYPE          = "type";
 
-	private final double calctimeTick;
+	private final float calctimeTick;
 	private final int stationId;
 	private final OwmClient.HistoryType type;
-	private final List<WeatherData> history;
+	private final List<AbstractWeatherData> history;
 
 	/**
 	 * @param json */
 	public WeatherHistoryStationResponse (JSONObject json) {
 		super (json);
 
-		String calcTimeStr = json.optString (AbstractOwmResponse.JSON_CALCTIME);
-		this.calctimeTick = AbstractOwmResponse.getValueFromCalcTimeStr (calcTimeStr, WeatherHistoryStationResponse.JSON_CALCTIME_TICK);
 		this.stationId = json.optInt (WeatherHistoryStationResponse.JSON_STATION_ID, Integer.MIN_VALUE);
 
 		OwmClient.HistoryType typeValue = null;
@@ -54,17 +52,39 @@ public class WeatherHistoryStationResponse extends AbstractOwmResponse {
 			}
 		}
 		this.type = typeValue;
-		
+
+		if (this.type == OwmClient.HistoryType.TICK) {
+			String calcTimeStr = json.optString (AbstractOwmResponse.JSON_CALCTIME);
+			this.calctimeTick = AbstractOwmResponse.getValueFromCalcTimeStr (calcTimeStr, WeatherHistoryStationResponse.JSON_CALCTIME_TICK);
+		} else {
+			this.calctimeTick = Float.NaN;
+		}
+
 		JSONArray jsonHistory = json.optJSONArray (AbstractOwmResponse.JSON_LIST);
 		if (jsonHistory == null) {
 			this.history = Collections.emptyList ();
 		} else {
-			this.history = new ArrayList<WeatherData> (jsonHistory.length ());
-			for (int i = 0; i <jsonHistory.length (); i++) {
-				JSONObject jsonBaseWeatherData = jsonHistory.optJSONObject (i);
-				if (jsonBaseWeatherData != null) {
-					this.history.add (new WeatherData (jsonBaseWeatherData));
-				}
+			this.history = new ArrayList<AbstractWeatherData> (jsonHistory.length ());
+			switch (this.type) {
+				case TICK:
+					for (int i = 0; i <jsonHistory.length (); i++) {
+						JSONObject jsonBaseWeatherData = jsonHistory.optJSONObject (i);
+						if (jsonBaseWeatherData != null) {
+							this.history.add (new WeatherData (jsonBaseWeatherData));
+						}
+					}
+					break;
+				case HOUR:
+				case DAY:
+					for (int i = 0; i <jsonHistory.length (); i++) {
+						JSONObject jsonBaseWeatherData = jsonHistory.optJSONObject (i);
+						if (jsonBaseWeatherData != null) {
+							this.history.add (new SampledWeatherData (jsonBaseWeatherData));
+						}
+					}
+					break;
+				default:
+					break;
 			}
 		}
 
@@ -94,7 +114,7 @@ public class WeatherHistoryStationResponse extends AbstractOwmResponse {
 	public boolean hasHistory () {
 		return this.history != null && !this.history.isEmpty ();
 	}
-	public List<WeatherData> getHistory () {
+	public List<AbstractWeatherData> getHistory () {
 		return this.history;
 	}
 }

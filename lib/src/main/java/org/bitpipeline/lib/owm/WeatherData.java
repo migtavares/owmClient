@@ -25,49 +25,11 @@ import java.util.Set;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class WeatherData {
-	private static final String JSON_DATE_TIME = "dt";
-	private static final String JSON_MAIN      = "main";
-	private static final String JSON_WIND      = "wind";
+public class WeatherData extends AbstractWeatherData {
 	private static final String JSON_CLOUDS    = "clouds";
-	private static final String JSON_RAIN      = "rain";
-	private static final String JSON_SNOW      = "snow";
 	private static final String JSON_WEATHER   = "weather";
 
-	public static class GeoCoord {
-		private static final String JSON_LAT = "lat";
-		private static final String JSON_LON = "lon";
-
-		private float latitude;
-		private float longitude;
-
-		GeoCoord (JSONObject json) {
-			this.latitude = (float) json.optDouble (GeoCoord.JSON_LAT);
-			this.longitude = (float) json.optDouble (GeoCoord.JSON_LON);
-		}
-
-		public boolean hasLatitude () {
-			return this.latitude != Float.NaN;
-		}
-		public float getLatitude () {
-			return latitude;
-		}
-
-		public boolean hasLongitude () {
-			return this.longitude != Float.NaN;
-		}
-		public float getLongitude () {
-			return longitude;
-		}
-	}
-
-	public static class Main {
-		private static final String JSON_TEMP     = "temp";
-		private static final String JSON_TEMP_MIN = "temp_min";
-		private static final String JSON_TEMP_MAX = "temp_max";
-		private static final String JSON_HUMIDITY = "humidity";
-		private static final String JSON_PRESSURE = "pressure";
-
+	public static class Main extends AbstractWeatherData.Main {
 		private final float temp;
 		private final float tempMin;
 		private final float tempMax;
@@ -118,13 +80,7 @@ public class WeatherData {
 		}
 	}
 
-	public static class Wind {
-		private static final String JSON_SPEED   = "speed";
-		private static final String JSON_DEG     = "deg";
-		private static final String JSON_GUST    = "gust";
-		private static final String JSON_VAR_BEG = "var_beg";
-		private static final String JSON_VAR_END = "var_end";
-
+	public static class Wind extends AbstractWeatherData.Wind {
 		private final float speed;
 		private final int deg;
 		private final float gust;
@@ -176,7 +132,7 @@ public class WeatherData {
 	}
 
 	private static class TimedDetails {
-		private Map<Integer, Float> measurements = null;
+		private Map<Integer, Integer> measurements = null;
 
 		TimedDetails () {
 		}
@@ -186,7 +142,7 @@ public class WeatherData {
 				String value = json.optString (String.format ("%dh", i));
 				if (!value.isEmpty ()) {
 					try {
-						putMeasure (i, Float.valueOf (value));
+						putMeasure (i, Integer.valueOf (value));
 					} catch (NumberFormatException nfe) {
 						// we just ignore this entry if we can't parse it's value.
 					}
@@ -197,18 +153,18 @@ public class WeatherData {
 		public boolean hasMeasures ()  {
 			return this.measurements != null && this.measurements.size () > 0;
 		}
-		private void putMeasure (int lastHours, float value) {
+		private void putMeasure (int lastHours, Integer value) {
 			if (this.measurements == null)
-				this.measurements = new HashMap<Integer, Float> ();
-			this.measurements.put (Integer.valueOf (lastHours), Float.valueOf (value));
+				this.measurements = new HashMap<Integer, Integer> ();
+			this.measurements.put (Integer.valueOf (lastHours), value);
 		}
-		public float getMeasure (int lastHours) {
-			Float value = this.measurements.get (Integer.valueOf (lastHours));
-			return value != null? value.floatValue () : Float.NaN;
+		public int getMeasure (int lastHours) {
+			Integer value = this.measurements.get (Integer.valueOf (lastHours));
+			return value != null? value.intValue () : Integer.MIN_VALUE;
 		}
-		public float getMeasure (Integer lastHours) {
-			Float value = this.measurements.get (lastHours);
-			return value != null? value.floatValue () : Float.NaN;
+		public int getMeasure (Integer lastHours) {
+			Integer value = this.measurements.get (lastHours);
+			return value != null? value.intValue () : Integer.MIN_VALUE;
 		}
 		public Set<Integer> measurements () {
 			if (this.measurements == null)
@@ -477,7 +433,7 @@ public class WeatherData {
 		}
 	}
 
-	private final long dateTime;
+	
 	private final Main main;
 	private final Wind wind;
 	private final Clouds clouds;
@@ -486,7 +442,7 @@ public class WeatherData {
 	private final List<WeatherCondition> weatherConditions;
 
 	public WeatherData (JSONObject json) {
-		this.dateTime = json.optLong (WeatherData.JSON_DATE_TIME, Long.MIN_VALUE);
+		super (json);
 
 		JSONObject jsonMain = json.optJSONObject (WeatherData.JSON_MAIN);
 		this.main = jsonMain != null ? new Main (jsonMain) : null;
@@ -534,10 +490,6 @@ public class WeatherData {
 		}
 	}
 
-	public long getDateTime () {
-		return this.dateTime;
-	}
-
 	public boolean hasMain () {
 		return this.main != null;
 	}
@@ -562,14 +514,14 @@ public class WeatherData {
 	public boolean hasRain () {
 		return this.rain != null;
 	}
-	public Precipitation getRain () {
+	public Precipitation getRainObj () {
 		return this.rain;
 	}
 
 	public boolean hasSnow () {
 		return this.snow != null;
 	}
-	public Precipitation getSnow () {
+	public Precipitation getSnowObj () {
 		return this.snow;
 	}
 
@@ -578,5 +530,70 @@ public class WeatherData {
 	}
 	public List<WeatherCondition> getWeatherConditions () {
 		return this.weatherConditions;
+	}
+
+	/* */
+
+	public float getTemp () {
+		if (hasMain () && this.main.hasTemp ())
+			return this.main.getTemp ();
+		return Float.NaN;
+	}
+
+	public float getHumidity () {
+		if (hasMain () && this.main.hasHumidity ())
+			return this.main.getHumidity ();
+		return Float.NaN;
+	}
+
+	public float getPressure () {
+		if (hasMain () && this.main.hasPressure ())
+			return this.main.getPressure ();
+		return Float.NaN;
+	}
+
+	public float getWindSpeed () {
+		if (hasWind () && this.wind.hasSpeed ())
+			return this.wind.getSpeed ();
+		return Float.NaN;
+	}
+
+	public float getWindGust () {
+		if (hasWind () && this.wind.hasGust ())
+			return this.wind.getGust ();
+		return Float.NaN;
+	}
+
+	public int getWindDeg () {
+		if (hasWind () && this.wind.hasDeg ())
+			return this.wind.getDeg ();
+		return Integer.MIN_VALUE;
+	}
+
+	public int getRain () {
+		if (!hasRain ())
+			return Integer.MIN_VALUE;
+		int measure = this.rain.getMeasure (1);
+		if (measure != Integer.MIN_VALUE)
+			return measure;
+		return this.rain.getToday ();
+	}
+
+	public int getSnow () {
+		if (!hasSnow ())
+			return Integer.MIN_VALUE;
+		int measure = this.snow.getMeasure (1);
+		if (measure != Integer.MIN_VALUE)
+			return measure;
+		return this.snow.getToday ();
+	}
+
+	public int getPrecipitation () {
+		int precipitation = Integer.MIN_VALUE;
+		if (hasRain ())
+			precipitation = getRain ();
+		if (hasSnow ())
+			precipitation = precipitation != Integer.MIN_VALUE ? precipitation + getSnow () : getSnow (); 
+		return precipitation;
 	}
 }
