@@ -58,11 +58,19 @@ For enumerations there's a special value `UNKNOWN` that means that although a va
 
 Actually we should also check if there are hourly reports of rain by calling `rain.measurements ()`which would give us a set of integers that represent the hours of the measurement. Then we can get each of the measure by calling `rain.getMeasure (intHour)`.
 
-# Basic Weather Data Structure
+# Class Diagrams
+## Basic Weather Data Structure
 
-	                 +-------------+
-	                 | WeatherData |
-	                 +-----·-------+
+	                        +---------------------+
+	                        | AbstractWeatherData |
+	                        +------·-------·------+
+				                  /_\     /_\
+						           |       |
+				           +-------+       +------+
+			               |                      |
+	                 +-------------+    +--------------------+
+	                 | WeatherData |    | SampledWeatherData |
+	                 +-----·-------+    +--------------------+
 	                      /_\
                            |
                            |
@@ -76,6 +84,13 @@ Actually we should also check if there are hourly reports of rain by calling `ra
 	+---------------------+   +-------------------+
 	| ForecastWeatherData |   | StatusWeatherData |
 	+---------------------+   +-------------------+
+
+## Open Weather Map responses classes
+
++ `WeatherForecastResponse` - list of `ForecastWeatherData`
++ `WeatherHistoryCityResponse` - list of `WeatherData`
++ `WeatherHistoryStationResponse` - list of `AbstractWeatherData`, using the implementation `WeatherData` for responses to `TICK` history and `SampledWeatherData` for `HOUR` and `DAY`
++ `WeatherStatusResponse` - list of `StatusWeatherData`
 
 # License												
 Copyright 2013 J. Miguel P. Tavares
