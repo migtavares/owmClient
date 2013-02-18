@@ -1,6 +1,12 @@
 # Introduction
 This is a Java library to retrieve weather information and forecasts from [Open Weather Map](http://http://openweathermap.org/).
 
+# Continuous Integration
+
+[![Build Status](https://travis-ci.org/migtavares/owmClient.png?branch=master)](https://travis-ci.org/migtavares/owmClient)
+
+Continuous integration is done on [Travis CI](https://travis-ci.org) and the status for the OwmClient can be found [here](https://travis-ci.org/migtavares/owmClient).
+
 # Features
 
 ## Implemented
@@ -19,12 +25,14 @@ This is a Java library to retrieve weather information and forecasts from [Open 
 + getting weather forecast for a city by
 	+ OpenWeatherMap city id
 	+ city name
++ getting weather history
+	+ from a city id
+	+ from a station id (partial)
 + using an OpenWeatherMap APPID
 
 ## Planned
 
-+ weather station history
-+ city weather history
+The weather history for stations is still not complete.
 
 # Usage
 
@@ -39,24 +47,22 @@ For enumerations there's a special value `UNKNOWN` that means that although a va
 
 ## Simple Example
 
+
 	OwmClient owm = new OwmClient ();
-	WeatherStatusResponse currentWeather = owm.currentWeatherAtCity ("london", "UK");
+	WeatherStatusResponse currentWeather = owm.currentWeatherAtCity ("Tokyo", "JP");
 	if (currentWeather.hasWeatherStatus ()) {
 		WeatherData weather = currentWeather.getWeatherStatus ().get (0);
-		if (weather.hasRain ()) {
-			Precipitation rain = weather.getRain ();
-			if (rain.hasToday ()) {
-				if (rain.getToday () == 0)
-					System.out.println ("No reports of rain in London");
-				else
-					System.out.println ("Another report of rain in London");
-			}
-		} else {
-			System.out.println ("No rain information in London");
-		}
+		if (weather.getPrecipitation () == Integer.MIN_VALUE) {
+			WeatherCondition weatherCondition = weather.getWeatherConditions ().get (0);
+			String description = weatherCondition.getDescription ();
+			if (description.contains ("rain") || description.contains ("shower"))
+				System.out.println ("No rain measures in Tokyo but reports of " + description);
+			else
+				System.out.println ("No rain measures in Tokyo: " + description);
+		} else
+			System.out.println ("It's raining in Tokyo: " + weather.getPrecipitation () + " mm/h");
 	}
 
-Actually we should also check if there are hourly reports of rain by calling `rain.measurements ()`which would give us a set of integers that represent the hours of the measurement. Then we can get each of the measure by calling `rain.getMeasure (intHour)`.
 
 # Class Diagrams
 ## Basic Weather Data Structure
