@@ -23,19 +23,17 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.lang.reflect.Method;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.HttpMethod;
-import org.apache.commons.httpclient.HttpMethodBase;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.GetMethod;
+import org.apache.http.Header;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpVersion;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.message.BasicHttpResponse;
 import org.bitpipeline.lib.owm.OwmClient.HistoryType;
 import org.bitpipeline.lib.owm.WeatherForecastResponse.City;
 import org.json.JSONException;
@@ -48,16 +46,14 @@ import org.mockito.stubbing.Answer;
  * @author mtavares */
 public class OwmClientTest {
 
-	private HttpClient createHttpClientThatRespondsWith (final String response) throws HttpException, IOException {
+	private HttpClient createHttpClientThatRespondsWith (final String responseBody) throws IOException {
 		HttpClient mockHttpClient = mock (HttpClient.class);
-		when (mockHttpClient.executeMethod (any (HttpMethod.class))).then (new Answer<Integer>() {
+		when (mockHttpClient.execute (any (HttpGet.class))).then (new Answer<HttpResponse>() {
 			@Override
-			public Integer answer (InvocationOnMock invocation) throws Throwable {
-				GetMethod getMethod = (GetMethod) invocation.getArguments ()[0];
-				Method setResponseStream = HttpMethodBase.class.getDeclaredMethod ("setResponseStream", InputStream.class);
-				setResponseStream.setAccessible (true);
-				setResponseStream.invoke (getMethod, new ByteArrayInputStream (response.getBytes ()));
-				return HttpStatus.SC_OK;
+			public HttpResponse answer (InvocationOnMock invocation) throws Throwable {
+				HttpResponse response = new BasicHttpResponse (HttpVersion.HTTP_1_1, 200, "Ok");
+				response.setEntity (new StringEntity (responseBody));
+				return response;
 			}
 		});
 		return mockHttpClient;
@@ -98,28 +94,28 @@ public class OwmClientTest {
 	public void testAPPIDHeaderRequest () throws IOException, JSONException {
 		final String appid = UUID.randomUUID ().toString ();
 		HttpClient mockHttpClient = mock (HttpClient.class);
-		when (mockHttpClient.executeMethod (any (HttpMethod.class))).then (new Answer<Integer>() {
+		when (mockHttpClient.execute (any (HttpGet.class))).then (new Answer<HttpResponse>() {
 			@Override
-			public Integer answer (InvocationOnMock invocation) throws Throwable {
-				GetMethod getMethod = (GetMethod) invocation.getArguments ()[0];
-
-				// Check the request
-				assertEquals (appid, getMethod.getRequestHeader ("x-api-key").getValue ());
-
-				// return a valid response
-				Method setResponseStream = HttpMethodBase.class.getDeclaredMethod ("setResponseStream", InputStream.class);
-				setResponseStream.setAccessible (true);
-				setResponseStream.invoke (getMethod, new ByteArrayInputStream (TestData.CURRENT_WEATHER_AROUND_CITY_COORD.getBytes ()));
-				return HttpStatus.SC_OK;
+			public HttpResponse answer (InvocationOnMock invocation) throws Throwable {
+				HttpGet httpGet = (HttpGet) invocation.getArguments ()[0];
+				Header[] headers = httpGet.getHeaders ("x-api-key");
+				assertNotNull (headers);
+				assertEquals (1, headers.length);
+				assertEquals (appid, headers[0].getValue ());
+				
+				HttpResponse response = new BasicHttpResponse (HttpVersion.HTTP_1_1, 200, "Ok");
+				response.setEntity (new StringEntity (TestData.CURRENT_WEATHER_AROUND_CITY_COORD));
+				return response;
 			}
 		});
+
 		OwmClient owm = new OwmClient (mockHttpClient);
 		owm.setAPPID (appid);
 		owm.currentWeatherAtCity (55f, 37f, 10);
 	}
 
 	@Test
-	public void testCurrentWeatherAroundPoint () throws HttpException, IOException, JSONException {
+	public void testCurrentWeatherAroundPoint () throws IOException, JSONException {
 		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.CURRENT_WEATHER_AROUND_POINT);
 		OwmClient owm = new OwmClient (mockHttpClient);
 		WeatherStatusResponse currentWeather = owm.currentWeatherAroundPoint (55f, 37f, 10);
@@ -128,7 +124,7 @@ public class OwmClientTest {
 	}
 
 	@Test
-	public void testCurrentWeatherAroundCity () throws HttpException, IOException, JSONException {
+	public void testCurrentWeatherAroundCity () throws IOException, JSONException {
 		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.CURRENT_WEATHER_AROUND_CITY_COORD);
 		OwmClient owm = new OwmClient (mockHttpClient);
 		WeatherStatusResponse currentWeather = owm.currentWeatherAtCity (55f, 37f, 10);
@@ -137,7 +133,7 @@ public class OwmClientTest {
 	}
 
 	@Test
-	public void testCurrentWeatherInBoundingBox () throws HttpException, IOException, JSONException {
+	public void testCurrentWeatherInBoundingBox () throws IOException, JSONException {
 		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.CURRENT_WEATHER_IN_BBOX);
 		OwmClient owm = new OwmClient (mockHttpClient);
 		WeatherStatusResponse currentWeather = owm.currentWeatherInBoundingBox (12f, 32f, 15f, 37f);
@@ -146,7 +142,7 @@ public class OwmClientTest {
 	}
 
 	@Test
-	public void testCurrentWeatherAtCityBoundingBox () throws HttpException, IOException, JSONException {
+	public void testCurrentWeatherAtCityBoundingBox () throws IOException, JSONException {
 		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.CURRENT_WEATHER_IN_CITY_BBOX);
 		OwmClient owm = new OwmClient (mockHttpClient);
 		WeatherStatusResponse currentWeather = owm.currentWeatherAtCityBoundingBox (12f, 32f, 15f, 37f);
@@ -155,7 +151,7 @@ public class OwmClientTest {
 	}
 
 	@Test
-	public void testCurrentWeatherInCircle () throws HttpException, IOException, JSONException {
+	public void testCurrentWeatherInCircle () throws IOException, JSONException {
 		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.CURRENT_WEATHER_IN_CIRCLE);
 		OwmClient owm = new OwmClient (mockHttpClient);
 		WeatherStatusResponse currentWeather = owm.currentWeatherInCircle (55.5f, 37.5f, 40f);
@@ -164,7 +160,7 @@ public class OwmClientTest {
 	}
 
 	@Test
-	public void testCurrentWeatherAtCityInCircle () throws HttpException, IOException, JSONException {
+	public void testCurrentWeatherAtCityInCircle () throws IOException, JSONException {
 		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.CURRENT_WEATHER_IN_CIRCLE);
 		OwmClient owm = new OwmClient (mockHttpClient);
 		WeatherStatusResponse currentWeather = owm.currentWeatherAtCityCircle (55.5f, 37.5f, 40f);
@@ -173,7 +169,7 @@ public class OwmClientTest {
 	}
 
 	@Test
-	public void testCurrentWeatherAtCityId () throws HttpException, IOException, JSONException {
+	public void testCurrentWeatherAtCityId () throws IOException, JSONException {
 		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.CURRENT_WEATHER_AT_CITY_ID_MOSKOW);
 		OwmClient owm = new OwmClient (mockHttpClient);
 		StatusWeatherData weatherData = owm.currentWeatherAtCity (524901);
@@ -183,7 +179,7 @@ public class OwmClientTest {
 	}
 
 	@Test
-	public void testCurrentWeatherAtStationId () throws HttpException, IOException, JSONException {
+	public void testCurrentWeatherAtStationId () throws IOException, JSONException {
 		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.CURRENT_WEATHER_AT_STATION_ID_9040);
 		OwmClient owm = new OwmClient (mockHttpClient);
 		StatusWeatherData weatherData = owm.currentWeatherAtStation (9040);
@@ -218,7 +214,7 @@ public class OwmClientTest {
 	}
 
 	@Test
-	public void testCurrentWeatherAtCityName () throws HttpException, IOException, JSONException {
+	public void testCurrentWeatherAtCityName () throws IOException, JSONException {
 		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.CURRENT_WEATHER_AT_CITY_NAME_LONDON);
 		OwmClient owm = new OwmClient (mockHttpClient);
 		WeatherStatusResponse currentWeather = owm.currentWeatherAtCity ("london");
@@ -230,7 +226,7 @@ public class OwmClientTest {
 	}
 
 	@Test
-	public void testCurrentWeatherAtCityNameWithCountryCode () throws HttpException, IOException, JSONException {
+	public void testCurrentWeatherAtCityNameWithCountryCode () throws IOException, JSONException {
 		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.CURRENT_WEATHER_AT_CITY_NAME_LONDON_COUNTRY_CODE_UK);
 		OwmClient owm = new OwmClient (mockHttpClient);
 		WeatherStatusResponse currentWeather = owm.currentWeatherAtCity ("london", "UK");
@@ -242,7 +238,7 @@ public class OwmClientTest {
 	}
 
 	@Test
-	public void testForecastAtCityId () throws HttpException, IOException, JSONException {
+	public void testForecastAtCityId () throws IOException, JSONException {
 		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.FORECAST_WEATHER_AT_CITY_ID_LISBON);
 		OwmClient owm = new OwmClient (mockHttpClient);
 		WeatherForecastResponse forecastResponse = owm.forecastWeatherAtCity (524901);
@@ -254,7 +250,7 @@ public class OwmClientTest {
 	}
 
 	@Test
-	public void testForecastAtCityName () throws HttpException, IOException, JSONException {
+	public void testForecastAtCityName () throws IOException, JSONException {
 		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.FORECAST_WEATHER_AT_CITY_NAME_LISBON);
 		OwmClient owm = new OwmClient (mockHttpClient);
 		WeatherForecastResponse forecastResponse = owm.forecastWeatherAtCity ("Lisbon");
@@ -266,7 +262,7 @@ public class OwmClientTest {
 	}
 
 	@Test
-	public void testHourHistoryWeatherAtCity () throws HttpException, IOException, JSONException {
+	public void testHourHistoryWeatherAtCity () throws IOException, JSONException {
 		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.HISTORY_WEATHER_AT_CITY_ID);
 		OwmClient owm = new OwmClient (mockHttpClient);
 		WeatherHistoryCityResponse history = owm.historyWeatherAtCity (2885679, HistoryType.HOUR);
@@ -278,7 +274,7 @@ public class OwmClientTest {
 	}
 
 	@Test
-	public void testTickHistoryWeatherAtStation () throws HttpException, IOException, JSONException {
+	public void testTickHistoryWeatherAtStation () throws IOException, JSONException {
 		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.HISTORY_WEATHER_AT_STATION_ID_BY_TICK);
 		OwmClient owm = new OwmClient (mockHttpClient);
 		WeatherHistoryStationResponse history = owm.historyWeatherAtStation (9040, HistoryType.TICK);
@@ -290,7 +286,7 @@ public class OwmClientTest {
 	}
 
 	@Test
-	public void testHourlyHistoryWeatherAtStation () throws HttpException, IOException, JSONException {
+	public void testHourlyHistoryWeatherAtStation () throws IOException, JSONException {
 		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.HISTORY_WEATHER_AT_STATION_ID_BY_HOUR);
 		OwmClient owm = new OwmClient (mockHttpClient);
 		WeatherHistoryStationResponse historyResponse = owm.historyWeatherAtStation (9040, HistoryType.HOUR);

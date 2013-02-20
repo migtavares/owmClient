@@ -16,12 +16,17 @@
 package org.bitpipeline.lib.owm;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringWriter;
 
-import org.apache.commons.httpclient.DefaultHttpMethodRetryHandler;
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.params.HttpMethodParams;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.StatusLine;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -38,12 +43,11 @@ public class OwmClient {
 
 	private String baseOwmUrl = "http://api.openweathermap.org/data/2.1/";
 	private String owmAPPID = null;
-	private int retriesPerRequest = 3;
 
 	private HttpClient httpClient;
 
 	public OwmClient () {
-		this.httpClient = new HttpClient ();
+		this.httpClient = new DefaultHttpClient ();
 	}
 
 	public OwmClient (HttpClient httpClient) {
@@ -226,22 +230,40 @@ public class OwmClient {
 
 	private JSONObject doQuery (String subUrl) throws JSONException, IOException {
 		String responseBody = null;
-		GetMethod httpget = new GetMethod (this.baseOwmUrl + subUrl);
+		HttpGet httpget = new HttpGet (this.baseOwmUrl + subUrl);
 		if (this.owmAPPID != null) {
-			httpget.addRequestHeader (OwmClient.APPID_HEADER, this.owmAPPID);
+			httpget.addHeader (OwmClient.APPID_HEADER, this.owmAPPID);
 		}
-		httpget.getParams ().setParameter (HttpMethodParams.RETRY_HANDLER,
-				new DefaultHttpMethodRetryHandler (this.retriesPerRequest, false));
 
+		HttpResponse response = this.httpClient.execute (httpget);
 		try {
-			int statusCode = this.httpClient.executeMethod (httpget);
-			if (statusCode != HttpStatus.SC_OK) {
+			StatusLine statusLine = response.getStatusLine ();
+			if (statusLine == null) {
 				throw new IOException (
-						String.format ("OWM server responded with status code %d: %s", statusCode, httpget.getStatusLine ()));
+						String.format ("Unable to get a response from OWM server"));
 			}
-			responseBody = httpget.getResponseBodyAsString (1024*48);
+			int statusCode = statusLine.getStatusCode ();
+			if (statusCode < 200 && statusCode >= 300) {
+				throw new IOException (
+						String.format ("OWM server responded with status code %d: %s", statusCode, statusLine));
+			}
+			/* Read the response content */
+			HttpEntity responseEntity = response.getEntity ();
+			InputStream contentStream = responseEntity.getContent ();
+			Reader isReader = new InputStreamReader (contentStream);
+			StringWriter strWriter = new StringWriter ((int) responseEntity.getContentLength ());
+			char[] buffer = new char[8*1024];
+			int n = 0;
+			while ((n = isReader.read(buffer)) != -1) {
+					strWriter.write(buffer, 0, n);
+			}
+			responseBody = strWriter.toString ();
+			contentStream.close ();
 		} catch (IOException e) {
 			throw e;
+		} catch (RuntimeException re) {
+			httpget.abort ();
+			throw re;
 		} finally {
 			httpget.releaseConnection ();
 		}

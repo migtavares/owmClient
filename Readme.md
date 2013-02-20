@@ -38,6 +38,26 @@ The weather history for stations is still not complete.
 
 Just create a instance of OwmClient, call it's methods and use their return values.
 
+## Dependencies
+
+To use this library in a environment that doesn't include Apache `httpclient` from `httpcommons` you must include the dependency in the final project.
+
+The same for the json parser `org.json`.
+
+With maven that can be accomplished with:
+
+	<dependency>
+		<groupId>org.apache.httpcomponents</groupId>
+		<artifactId>httpclient</artifactId>
+		<version>4.2.3</version>
+	</dependency>
+
+	<dependency>
+		<groupId>org.json</groupId>
+		<artifactId>json</artifactId>
+		<version>20090211</version>
+	</dependency>
+
 ## Note of caution
 There's almost no validation build in this library and the fetching of data from the JSON OpenWeatherMap API tries to survive without making much of a fuss.
 
