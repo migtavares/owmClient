@@ -17,7 +17,7 @@ package org.bitpipeline.lib.owm;
 
 import org.json.JSONObject;
 
-class LocalizedWeatherData extends WeatherData {
+public class LocalizedWeatherData extends WeatherData {
 	private static final String JSON_URL   = "url";
 	private static final String JSON_COORD = "coord";
 
