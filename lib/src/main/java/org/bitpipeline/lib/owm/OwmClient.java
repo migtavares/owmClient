@@ -236,6 +236,7 @@ public class OwmClient {
 		}
 
 		HttpResponse response = this.httpClient.execute (httpget);
+		InputStream contentStream = null;
 		try {
 			StatusLine statusLine = response.getStatusLine ();
 			if (statusLine == null) {
@@ -249,7 +250,7 @@ public class OwmClient {
 			}
 			/* Read the response content */
 			HttpEntity responseEntity = response.getEntity ();
-			InputStream contentStream = responseEntity.getContent ();
+			contentStream = responseEntity.getContent ();
 			Reader isReader = new InputStreamReader (contentStream);
 			StringWriter strWriter = new StringWriter ((int) responseEntity.getContentLength ());
 			char[] buffer = new char[8*1024];
@@ -265,7 +266,8 @@ public class OwmClient {
 			httpget.abort ();
 			throw re;
 		} finally {
-			httpget.releaseConnection ();
+			if (contentStream != null)
+				contentStream.close ();
 		}
 		return new JSONObject (responseBody);
 	}
