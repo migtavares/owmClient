@@ -44,7 +44,7 @@ public class WeatherHistoryStationResponse extends AbstractOwmResponse {
 
 		OwmClient.HistoryType typeValue = null;
 		String typeStr = json.optString (WeatherHistoryStationResponse.JSON_TYPE);
-		if (typeStr != null && !typeStr.isEmpty ()) {
+		if (typeStr != null && typeStr.length () > 0) {
 			try {
 				typeValue = OwmClient.HistoryType.valueOf (typeStr.trim ().toUpperCase ());
 			} catch (IllegalArgumentException e) {

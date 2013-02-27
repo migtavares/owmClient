@@ -64,7 +64,7 @@ public class LocalizedWeatherData extends WeatherData {
 	}
 
 	public boolean hasUrl () {
-		return this.url != null && !this.url.isEmpty ();
+		return this.url != null && this.url.length () > 0;
 	}
 	public String getUrl () {
 		return this.url;

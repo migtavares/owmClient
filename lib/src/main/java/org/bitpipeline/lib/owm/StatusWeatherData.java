@@ -58,7 +58,7 @@ public class StatusWeatherData extends LocalizedWeatherData {
 	}
 
 	public boolean hasName () {
-		return this.name != null && !this.name.isEmpty ();
+		return this.name != null && this.name.length () > 0;
 	}
 	public String getName () {
 		return this.name;

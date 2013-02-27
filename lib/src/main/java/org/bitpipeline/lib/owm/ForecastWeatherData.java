@@ -15,7 +15,6 @@
  ***************************************************************************/
 package org.bitpipeline.lib.owm;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 /**

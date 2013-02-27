@@ -20,7 +20,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
@@ -111,7 +110,7 @@ public class WeatherForecastResponse extends AbstractOwmResponse {
 		}
 
 		public boolean hasCountry () {
-			return this.country != null && !this.country.isEmpty ();
+			return this.country != null && this.country.length () > 0;
 		}
 		public String getCountry () {
 			return this.country;
@@ -168,7 +167,7 @@ public class WeatherForecastResponse extends AbstractOwmResponse {
 	}
 
 	public boolean hasUrl () {
-		return this.url != null && !this.url.isEmpty ();
+		return this.url != null && this.url.length () > 0;
 	}
 	public String getUrl () {
 		return this.url;
@@ -182,14 +181,14 @@ public class WeatherForecastResponse extends AbstractOwmResponse {
 	}
 
 	public boolean hasUnits () {
-		return this.units != null && !this.units.isEmpty ();
+		return this.units != null && this.units.length () > 0;
 	}
 	public String getUnits () {
 		return this.units;
 	}
 
 	public boolean hasModel () {
-		return this.model != null && !this.model.isEmpty ();
+		return this.model != null && this.model.length () > 0;
 	}
 	public String getModel () {
 		return this.model;

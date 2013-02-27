@@ -140,11 +140,11 @@ public class WeatherData extends AbstractWeatherData {
 		TimedDetails (JSONObject json) {
 			for (int i=1; i<=24; i++) {
 				String value = json.optString (String.format ("%dh", i));
-				if (!value.isEmpty ()) {
+				if (value.length () > 0) {
 					try {
 						putMeasure (i, Integer.valueOf (value));
 					} catch (NumberFormatException nfe) {
-						// we just ignore this entry if we can't parse it's value.
+						continue;
 					}
 				}
 			}
@@ -289,7 +289,7 @@ public class WeatherData extends AbstractWeatherData {
 		}
 
 		public boolean hasConditions () {
-			return this.conditions != null && ! this.conditions.isEmpty ();
+			return this.conditions != null && !this.conditions.isEmpty ();
 		}
 		public List<CloudDescription> getConditions () {
 			return this.conditions;
@@ -412,21 +412,21 @@ public class WeatherData extends AbstractWeatherData {
 		}
 
 		public boolean hasMain () {
-			return this.main != null && !this.main.isEmpty ();
+			return this.main != null && this.main.length () > 0;
 		}
 		public String getMain () {
 			return this.main;
 		}
 
 		public boolean hasDescription () {
-			return this.description != null && !this.description.isEmpty ();
+			return this.description != null && this.description.length () > 0;
 		}
 		public String getDescription () {
 			return this.description;
 		}
 
 		public boolean hasIconName () {
-			return this.iconName != null && !this.iconName.isEmpty ();
+			return this.iconName != null && this.iconName.length () > 0;
 		}
 		public String getIconName () {
 			return this.iconName;
