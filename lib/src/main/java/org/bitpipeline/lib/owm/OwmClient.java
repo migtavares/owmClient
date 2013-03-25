@@ -252,7 +252,10 @@ public class OwmClient {
 			HttpEntity responseEntity = response.getEntity ();
 			contentStream = responseEntity.getContent ();
 			Reader isReader = new InputStreamReader (contentStream);
-			StringWriter strWriter = new StringWriter ((int) responseEntity.getContentLength ());
+			int contentSize = (int) responseEntity.getContentLength ();
+			if (contentSize < 0)
+				contentSize = 8*1024;
+			StringWriter strWriter = new StringWriter (contentSize);
 			char[] buffer = new char[8*1024];
 			int n = 0;
 			while ((n = isReader.read(buffer)) != -1) {
