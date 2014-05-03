@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -139,7 +140,7 @@ public class WeatherData extends AbstractWeatherData {
 
 		TimedDetails (JSONObject json) {
 			for (int i=1; i<=24; i++) {
-				String value = json.optString (String.format ("%dh", i));
+				String value = json.optString (String.format (Locale.ROOT, "%dh", i));
 				if (value.length () > 0) {
 					try {
 						putMeasure (i, Integer.valueOf (value));

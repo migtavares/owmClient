@@ -17,6 +17,7 @@ package org.bitpipeline.lib.owm;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -283,7 +284,7 @@ public class SampledWeatherData extends AbstractWeatherData {
 
 		SampledTimedDetails (JSONObject json) {
 			for (int i=1; i<=24; i++) {
-				JSONObject value = json.optJSONObject (String.format ("%dh", i));
+				JSONObject value = json.optJSONObject (String.format (Locale.ROOT, "%dh", i));
 				if (value != null) {
 						putMeasure (i, new SampledIValue (value));
 				}
