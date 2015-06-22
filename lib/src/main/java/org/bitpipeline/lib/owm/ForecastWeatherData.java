@@ -20,7 +20,7 @@ import org.json.JSONObject;
 /**
  * @author mtavares */
 public class ForecastWeatherData extends LocalizedWeatherData {
-	static private final String JSON_CALC_DT = "calc_dt";
+	static private final String DATETIME_KEY_NAME = "dt";
 
 	private long calcDateTime = Long.MIN_VALUE;
 	
@@ -29,7 +29,7 @@ public class ForecastWeatherData extends LocalizedWeatherData {
 	 * @throws JSONException */
 	public ForecastWeatherData (JSONObject json) {
 		super (json);
-		this.calcDateTime = json.optLong (ForecastWeatherData.JSON_CALC_DT, Long.MIN_VALUE);
+		this.calcDateTime = json.optLong (ForecastWeatherData.DATETIME_KEY_NAME, Long.MIN_VALUE);
 	}
 
 	public long getCalcDateTime () {
