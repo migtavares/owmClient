@@ -42,18 +42,18 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 /**
- * 
- * @author mtavares */
+ * @author mtavares
+ */
 public class OwmClientTest {
 
 	private HttpClient createHttpClientThatRespondsWith (final String responseBody) throws IOException {
 		HttpClient mockHttpClient = mock (HttpClient.class);
-		when (mockHttpClient.execute (any (HttpGet.class))).then (new Answer<HttpResponse>() {
+		when (mockHttpClient.execute (any (HttpGet.class))).then (new Answer<HttpResponse> () {
 			@Override
 			public HttpResponse answer (InvocationOnMock invocation) throws Throwable {
-				HttpResponse response = new BasicHttpResponse (HttpVersion.HTTP_1_1, 200, "Ok");
-				response.setEntity (new StringEntity (responseBody));
-				return response;
+			HttpResponse response = new BasicHttpResponse (HttpVersion.HTTP_1_1, 200, "Ok");
+			response.setEntity (new StringEntity (responseBody));
+			return response;
 			}
 		});
 		return mockHttpClient;
@@ -94,18 +94,18 @@ public class OwmClientTest {
 	public void testAPPIDHeaderRequest () throws IOException, JSONException {
 		final String appid = UUID.randomUUID ().toString ();
 		HttpClient mockHttpClient = mock (HttpClient.class);
-		when (mockHttpClient.execute (any (HttpGet.class))).then (new Answer<HttpResponse>() {
+		when (mockHttpClient.execute (any (HttpGet.class))).then (new Answer<HttpResponse> () {
 			@Override
 			public HttpResponse answer (InvocationOnMock invocation) throws Throwable {
-				HttpGet httpGet = (HttpGet) invocation.getArguments ()[0];
-				Header[] headers = httpGet.getHeaders ("x-api-key");
-				assertNotNull (headers);
-				assertEquals (1, headers.length);
-				assertEquals (appid, headers[0].getValue ());
-				
-				HttpResponse response = new BasicHttpResponse (HttpVersion.HTTP_1_1, 200, "Ok");
-				response.setEntity (new StringEntity (TestData.CURRENT_WEATHER_AROUND_CITY_COORD));
-				return response;
+			HttpGet httpGet = (HttpGet) invocation.getArguments ()[0];
+			Header[] headers = httpGet.getHeaders ("x-api-key");
+			assertNotNull (headers);
+			assertEquals (1, headers.length);
+			assertEquals (appid, headers[0].getValue ());
+
+			HttpResponse response = new BasicHttpResponse (HttpVersion.HTTP_1_1, 200, "Ok");
+			response.setEntity (new StringEntity (TestData.CURRENT_WEATHER_AROUND_CITY_COORD));
+			return response;
 			}
 		});
 
@@ -188,27 +188,27 @@ public class OwmClientTest {
 		assertEquals (1360924205, weatherData.getDateTime ());
 
 		assertTrue (weatherData.hasMain ());
-		assertEquals (  281.48f, weatherData.getMain ().getTemp (),     0.001f);
-		assertEquals (  99f,     weatherData.getMain ().getHumidity (), 0.001f);
-		assertEquals (1016f,     weatherData.getMain ().getPressure (), 0.001f);
-		
+		assertEquals (281.48f, weatherData.getMain ().getTemp (), 0.001f);
+		assertEquals (99f, weatherData.getMain ().getHumidity (), 0.001f);
+		assertEquals (1016f, weatherData.getMain ().getPressure (), 0.001f);
+
 		assertTrue (weatherData.hasWind ());
 		assertEquals (0f, weatherData.getWind ().getSpeed (), 0.001f);
-		assertEquals (0f, weatherData.getWind ().getGust (),  0.001f);
+		assertEquals (0f, weatherData.getWind ().getGust (), 0.001f);
 		assertEquals (0, weatherData.getWind ().getDeg ());
-		
+
 		assertTrue (weatherData.hasRain ());
-		assertEquals (2,  weatherData.getRainObj ().measurements ().size ());
-		assertEquals (0f, weatherData.getRainObj ().getMeasure (1),  0.001f);
+		assertEquals (2, weatherData.getRainObj ().measurements ().size ());
+		assertEquals (0f, weatherData.getRainObj ().getMeasure (1), 0.001f);
 		assertEquals (0f, weatherData.getRainObj ().getMeasure (24), 0.001f);
-		assertEquals (0,  weatherData.getRainObj ().getToday ());
-		
+		assertEquals (0, weatherData.getRainObj ().getToday ());
+
 		assertTrue (weatherData.hasCoord ());
 		assertTrue (weatherData.getCoord ().hasLongitude ());
 		assertTrue (weatherData.getCoord ().hasLatitude ());
 		assertEquals (-8.7363f, weatherData.getCoord ().getLongitude (), 0.00001f);
-		assertEquals (39.1862f, weatherData.getCoord ().getLatitude (),  0.00001f);
-		
+		assertEquals (39.1862f, weatherData.getCoord ().getLatitude (), 0.00001f);
+
 		assertTrue (weatherData.hasStation ());
 		assertEquals (7, weatherData.getStation ().getZoom ());
 	}
@@ -290,7 +290,7 @@ public class OwmClientTest {
 		HttpClient mockHttpClient = createHttpClientThatRespondsWith (TestData.HISTORY_WEATHER_AT_STATION_ID_BY_HOUR);
 		OwmClient owm = new OwmClient (mockHttpClient);
 		WeatherHistoryStationResponse historyResponse = owm.historyWeatherAtStation (9040, HistoryType.HOUR);
-		assertNotNull  (historyResponse);
+		assertNotNull (historyResponse);
 		List<AbstractWeatherData> history = historyResponse.getHistory ();
 		assertNotNull (history);
 		assertTrue (history.size () == 14);
