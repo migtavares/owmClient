@@ -28,8 +28,8 @@ import org.json.JSONObject;
 public class WeatherStatusResponse extends AbstractOwmResponse {
 	private final List<StatusWeatherData> status;
 
-	/**
-	 * @param json */
+	/** A parser for a weather status query response
+	 * @param json The JSON obejct built from the OWM response */
 	public WeatherStatusResponse (JSONObject json) {
 		super (json);
 		JSONArray jsonWeatherStatus = json.optJSONArray (AbstractOwmResponse.JSON_LIST);

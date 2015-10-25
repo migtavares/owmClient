@@ -35,8 +35,8 @@ public class WeatherHistoryStationResponse extends AbstractOwmResponse {
 	private final OwmClient.HistoryType type;
 	private final List<AbstractWeatherData> history;
 
-	/**
-	 * @param json */
+	/** 
+	 * @param json a JSON object built from the response */
 	public WeatherHistoryStationResponse (JSONObject json) {
 		super (json);
 

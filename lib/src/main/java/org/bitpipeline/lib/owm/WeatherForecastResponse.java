@@ -137,9 +137,8 @@ public class WeatherForecastResponse extends AbstractOwmResponse {
 	private final Sys sys;
 	private final List<ForecastWeatherData> forecasts;
 
-	/**
-	 * @throws JSONException 
-	 *  */
+	/** A weather forecast response parser
+	 * @param json the json object with the weather forecast response */
 	public WeatherForecastResponse (JSONObject json) {
 		super (json);
 		this.url = json.optString (WeatherForecastResponse.JSON_URL);

@@ -35,8 +35,8 @@ public class WeatherHistoryCityResponse extends AbstractOwmResponse {
 	private final int cityId;
 	private final List<WeatherData> history;
 
-	/**
-	 * @param json */
+	/** A weather history city response parser
+	 * @param json the JSON object built with the response for the city weather history */
 	public WeatherHistoryCityResponse (JSONObject json) {
 		super (json);
 

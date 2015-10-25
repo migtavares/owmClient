@@ -25,8 +25,7 @@ public class ForecastWeatherData extends LocalizedWeatherData {
 	private long calcDateTime = Long.MIN_VALUE;
 	
 	/**
-	 * @param json
-	 * @throws JSONException */
+	 * @param json json container with the forecast data */
 	public ForecastWeatherData (JSONObject json) {
 		super (json);
 		this.calcDateTime = json.optLong (ForecastWeatherData.DATETIME_KEY_NAME, Long.MIN_VALUE);
