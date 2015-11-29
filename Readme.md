@@ -38,6 +38,26 @@ The weather history for stations is still not complete.
 
 Just create a instance of OwmClient, call it's methods and use their return values.
 
+## Using maven to fetch the own-lib dependency.
+
+Add the [OSSRH](https://oss.sonatype.org) maven repository to your project by adding the following snipet to your pom.xml file:
+
+	<repositories>
+		<repository>
+			<id>ossrh</id>
+			<url>https://oss.sonatype.org/content/groups/public/</url>
+		</repository>
+	</repositories>
+
+Then in the dependencies of your project add the own-lib dependency:
+
+	<dependency>
+		<groupId>org.bitpipeline.lib</groupId>
+		<artifactId>owm-lib</artifactId>
+		<version>2.1.3-SNAPSHOT</version>
+	</dependency>
+
+
 ## Dependencies
 
 To use this library in a environment that doesn't include Apache `httpclient` from `httpcommons` you must include the dependency in the final project.
